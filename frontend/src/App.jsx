@@ -2,7 +2,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import Layout from "./components/Layout.jsx";
 import Hospitals from "./pages/Hospitals.jsx";
 import DiagnosticCenters from "./pages/DiagnosticCenters.jsx";
-import BloodBanks from "./pages/BloodBanks.jsx";
+import BloodBanks from "./pages/BloodBanksPhp.jsx";
 import Pharmacies from "./pages/Pharmacies.jsx";
 import Ambulance from "./pages/Ambulance.jsx";
 import Telemedicine from "./pages/Telemedicine.jsx";
@@ -10,6 +10,7 @@ import DrugInteractions from "./pages/DrugInteractions.jsx";
 import Appointments from "./pages/Appointments.jsx";
 import SignIn from "./pages/SignIn.jsx";
 import SignUp from "./pages/SignUp.jsx";
+
 
 export default function App() {
   return (
