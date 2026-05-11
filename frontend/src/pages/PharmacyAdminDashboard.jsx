@@ -314,9 +314,11 @@ function logoutAdmin() {
 
   async function updateOrderStatus(orderId, status) {
     try {
-      const response = await api.patch(`/pharmacy/admin/orders/${orderId}/status`, {
-        status,
-      });
+      const response = await api.patch(
+  `/pharmacy/admin/orders/${orderId}/status`,
+  { status },
+  adminConfig()
+);
 
       setNotice({
         type: "success",
@@ -353,7 +355,11 @@ function logoutAdmin() {
     setLoading(true);
 
     try {
-      const response = await api.patch("/pharmacy/admin/settings/delivery", deliverySettings);
+      const response = await api.patch(
+  "/pharmacy/admin/settings/delivery",
+  deliverySettings,
+  adminConfig()
+);
 
       setNotice({
         type: "success",

@@ -105,37 +105,7 @@ function requirePharmacyAdmin(req, res, next) {
   }
 }
 
-function requirePharmacyAdmin(req, res, next) {
-  optionalAuth(req, res, () => {
-    if (!req.user) {
-      return res.status(401).json({
-        success: false,
-        message: "Authentication required.",
-      });
-    }
 
-    const adminEmails = String(process.env.PHARMACY_ADMIN_EMAILS || "")
-      .split(",")
-      .map((email) => email.trim().toLowerCase())
-      .filter(Boolean);
-
-    const userEmail = String(req.user.email || "").toLowerCase();
-
-    if (
-      req.user.role === "admin" ||
-      req.user.is_admin === 1 ||
-      req.user.is_admin === true ||
-      adminEmails.includes(userEmail)
-    ) {
-      return next();
-    }
-
-    return res.status(403).json({
-      success: false,
-      message: "Only pharmacy admin can access this dashboard.",
-    });
-  });
-}
 
 function money(value) {
   return Number(Number(value || 0).toFixed(2));
