@@ -453,7 +453,7 @@ router.use(async (_req, _res, next) => {
   }
 });
 
-router.post("/manager/accounts", requireSetupSecret, async (req, res) => {
+router.post("/manager/accounts", async (req, res) => {
   const {
     ambulance_id,
     manager_name,
