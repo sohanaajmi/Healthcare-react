@@ -78,17 +78,23 @@ const [loginForm, setLoginForm] = useState({
   }, [productForm.image]);
 
   useEffect(() => {
+  if (adminToken) {
     loadAdminData();
-  }, []);
+  }
+}, [adminToken]);
 
   useEffect(() => {
-    const timer = setTimeout(loadProducts, 250);
-    return () => clearTimeout(timer);
-  }, [search]);
+  if (!adminToken) return;
+
+  const timer = setTimeout(loadProducts, 250);
+  return () => clearTimeout(timer);
+}, [search, adminToken]);
 
   useEffect(() => {
+  if (adminToken) {
     loadOrders();
-  }, [orderStatus]);
+  }
+}, [orderStatus, adminToken]);
 
   async function loadAdminData() {
     setLoading(true);
@@ -542,10 +548,16 @@ function logoutAdmin() {
           </p>
         </div>
 
-        <button className="admin-refresh" onClick={loadAdminData}>
-          <RefreshCcw size={17} />
-          Refresh
-        </button>
+        <div className="admin-hero-actions">
+  <button className="admin-refresh" onClick={loadAdminData}>
+    <RefreshCcw size={17} />
+    Refresh
+  </button>
+
+  <button className="admin-logout" onClick={logoutAdmin}>
+    Logout Admin
+  </button>
+</div>
       </div>
 
       {notice && <div className={`admin-notice ${notice.type}`}>{notice.message}</div>}
@@ -826,6 +838,28 @@ function Stat({ icon, label, value }) {
 const styles = `
 .pharm-admin {
   color: #0f172a;
+}
+
+.admin-hero-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.admin-logout {
+  border: none;
+  border-radius: 14px;
+  padding: 12px 16px;
+  font-weight: 950;
+  cursor: pointer;
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.admin-logout:hover {
+  background: #ef4444;
+  color: white;
 }
 
 .admin-hero {
