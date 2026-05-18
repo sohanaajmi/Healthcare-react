@@ -8,7 +8,6 @@ import {
   MessageCircle,
   RefreshCcw,
   Save,
-  Settings,
   ShieldCheck,
   Truck,
   XCircle,
@@ -41,10 +40,6 @@ const initialService = {
 
 const serviceTypes = ["basic", "advanced", "icu", "neonatal", "cardiac"];
 const availabilityTypes = ["24/7", "day_only", "emergency_only"];
-
-function money(value) {
-  return Number(value || 0).toFixed(2);
-}
 
 function formatDate(value) {
   if (!value) return "N/A";
@@ -377,9 +372,15 @@ export default function AmbulanceManagerDashboard() {
             </span>
             <h1>Manage your ambulance and live location.</h1>
             <p>
-              Update service details, share current ambulance location, and view
-              user pickup locations/messages.
-            </p>
+  Update service details, share current ambulance location, and view
+  user pickup locations/messages.
+</p>
+
+{manager && (
+  <p className="manager-name">
+    Signed in as {manager.manager_name || manager.username}
+  </p>
+)}
           </div>
 
           <div className="hero-actions">
@@ -801,6 +802,12 @@ const styles = `
   background: #fee2e2;
   color: #991b1b;
 }
+.manager-name {
+  margin-top: 10px;
+  color: #fff;
+  font-weight: 900;
+}
+  
 
 .manager-stats {
   display: grid;

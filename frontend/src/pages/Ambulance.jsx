@@ -139,6 +139,14 @@ export default function Ambulance() {
   const [updateForm, setUpdateForm] = useState(initialUpdateForm);
   const [messageForm, setMessageForm] = useState(initialMessageForm);
   const [reviewForm, setReviewForm] = useState(initialReviewForm);
+  const [shareForm, setShareForm] = useState({
+  sender_name: "",
+  sender_phone: "",
+  sender_email: "",
+  latitude: "",
+  longitude: "",
+  message: "",
+});
   const [notice, setNotice] = useState(null);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -171,33 +179,6 @@ export default function Ambulance() {
     filters.sort,
     filters.order,
   ]);
-
-  useEffect(() => {
-    if (!user) return;
-
-    setShareForm((current) => ({
-  ...current,
-  sender_name: current.sender_name || user.name || "",
-  sender_email: current.sender_email || user.email || "",
-}));
-
-    setUpdateForm((current) => ({
-      ...current,
-      requester_name: current.requester_name || user.name || "",
-      requester_email: current.requester_email || user.email || "",
-    }));
-
-    setMessageForm((current) => ({
-      ...current,
-      sender_name: current.sender_name || user.name || "",
-      sender_email: current.sender_email || user.email || "",
-    }));
-
-    setReviewForm((current) => ({
-      ...current,
-      reviewer_name: current.reviewer_name || user.name || "",
-    }));
-  }, [user]);
 
   async function loadMeta() {
     try {
@@ -320,9 +301,26 @@ async function submitUserLocation(event) {
   }
 
   async function openDetails(service) {
-    setSelected(service);
-    setSelectedDetails(null);
-    setNotice(null);
+  setSelected(service);
+  setSelectedDetails(null);
+  setNotice(null);
+
+  setShareForm({
+    sender_name: user?.name || "",
+    sender_phone: "",
+    sender_email: user?.email || "",
+    latitude: "",
+    longitude: "",
+    message: "",
+  });
+
+  setReviewForm({
+    reviewer_name: user?.name || "",
+    reviewer_phone: "",
+    rating: 5,
+    review_text: "",
+    service_date: "",
+  });
 
     try {
       const response = await api.get(`/ambulance/services/${service.id}`);
@@ -333,34 +331,6 @@ async function submitUserLocation(event) {
         message: error.response?.data?.message || "Could not load ambulance details.",
       });
     }
-  }
-
-  function openUpdate(service) {
-    setUpdateTarget(service);
-    setUpdateForm((current) => ({
-      ...current,
-      requester_name: user?.name || current.requester_name,
-      requester_email: user?.email || current.requester_email,
-      proposed_service_name: service.service_name || "",
-      proposed_phone_primary: service.phone_primary || "",
-      proposed_phone_secondary: service.phone_secondary || "",
-      proposed_division: service.division || "",
-      proposed_district: service.district || "",
-      proposed_area: service.area || "",
-      proposed_address: service.address || "",
-      proposed_latitude: service.latitude || "",
-      proposed_longitude: service.longitude || "",
-      proposed_availability: service.availability || "",
-      proposed_base_charge: service.base_charge || "",
-      proposed_price_per_km: service.price_per_km || "",
-      proposed_equipment: service.equipment || "",
-    }));
-
-    setMessageForm((current) => ({
-      ...current,
-      sender_name: user?.name || current.sender_name,
-      sender_email: user?.email || current.sender_email,
-    }));
   }
 
   function updateUpdateForm(event) {
@@ -1176,16 +1146,6 @@ function AmbulanceCard({ service, onDetails }) {
     </article>
   );
 }
-
-const [shareForm, setShareForm] = useState({
-  sender_name: "",
-  sender_phone: "",
-  sender_email: "",
-  latitude: "",
-  longitude: "",
-  message: "",
-});
-
 
 const styles = `
 .ambulance-page {
