@@ -43,6 +43,13 @@ function money(value) {
   return Number(value || 0).toFixed(2);
 }
 
+function imageUrl(path) {
+  if (!path) return "";
+  if (path.startsWith("http")) return path;
+  if (path.startsWith("/uploads")) return `http://localhost:5000${path}`;
+  return path;
+}
+
 function formatDate(value) {
   if (!value) return "N/A";
 
@@ -455,9 +462,13 @@ export default function Pharmacies() {
                       </span>
                     )}
 
-                    <div className="product-icon">
-                      <Pill size={34} />
-                    </div>
+                    <div className="product-image">
+  {product.image ? (
+    <img src={imageUrl(product.image)} alt={product.name} />
+  ) : (
+    <Pill size={34} />
+  )}
+</div>
 
                     <h3>{product.name}</h3>
                     <p>{product.manufacturer}</p>
@@ -503,8 +514,12 @@ export default function Pharmacies() {
                   {cart.map((item) => (
                     <div className="cart-item" key={item.id}>
                       <div className="cart-pill">
-                        <Pill size={22} />
-                      </div>
+  {item.image ? (
+    <img src={imageUrl(item.image)} alt={item.name} />
+  ) : (
+    <Pill size={22} />
+  )}
+</div>
 
                       <div>
                         <h4>{item.name}</h4>
@@ -1033,15 +1048,22 @@ const styles = `
   font-weight: 950;
 }
 
-.product-icon {
-  width: 68px;
-  height: 68px;
+.product-image {
+  width: 100%;
+  height: 150px;
   display: grid;
   place-items: center;
   border-radius: 22px;
   background: linear-gradient(135deg, #dbeafe, #dcfce7);
   color: #2563eb;
   margin-bottom: 16px;
+  overflow: hidden;
+}
+
+.product-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .product-card h3 {
@@ -1479,6 +1501,16 @@ const styles = `
   .filter-card {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+}
+
+.cart-pill {
+  overflow: hidden;
+}
+
+.cart-pill img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 @media (max-width: 720px) {
