@@ -444,6 +444,14 @@ function requireAmbulanceManager(req, res, next) {
     });
   }
 }
+router.use(async (_req, _res, next) => {
+  try {
+    await ensureAmbulanceTables();
+    next();
+  } catch (error) {
+    next(error);
+  }
+});
 
 router.post("/manager/accounts", requireSetupSecret, async (req, res) => {
   const {
@@ -832,14 +840,7 @@ router.post("/services/:id/share-location", optionalAuth, async (req, res) => {
   });
 });
 
-router.use(async (_req, _res, next) => {
-  try {
-    await ensureAmbulanceTables();
-    next();
-  } catch (error) {
-    next(error);
-  }
-});
+
 
 router.get("/meta", async (_req, res) => {
   const [[statsRows], [divisions], [types], [emergencyServices]] = await Promise.all([
@@ -1023,6 +1024,8 @@ router.get("/services/:id", async (req, res) => {
     },
   });
 });
+
+
 
 router.post("/services/:id/reviews", async (req, res) => {
   const { reviewer_name, reviewer_phone, rating, review_text, service_date } = req.body;
