@@ -15,13 +15,16 @@ import PharmacyAdminDashboard from "./pages/PharmacyAdminDashboard.jsx";
 export default function App() {
   return (
     <Routes>
+      {/* Admin page without main Header/Navbar */}
+      <Route path="/pharmacy-admin" element={<PharmacyAdminDashboard />} />
+
+      {/* Public app pages with main Header/Navbar */}
       <Route element={<Layout />}>
         <Route path="/" element={<Navigate to="/hospitals" replace />} />
         <Route path="/hospitals" element={<Hospitals />} />
         <Route path="/diagnostic-centers" element={<DiagnosticCenters />} />
         <Route path="/blood-banks" element={<BloodBanks />} />
         <Route path="/pharmacies" element={<Pharmacies />} />
-        <Route path="/pharmacy-admin" element={<PharmacyAdminDashboard />} />
         <Route path="/ambulance" element={<Ambulance />} />
         <Route path="/telemedicine" element={<Telemedicine />} />
         <Route path="/drug-interactions" element={<DrugInteractions />} />
