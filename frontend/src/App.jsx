@@ -11,12 +11,14 @@ import Appointments from "./pages/Appointments.jsx";
 import SignIn from "./pages/SignIn.jsx";
 import SignUp from "./pages/SignUp.jsx";
 import PharmacyAdminDashboard from "./pages/PharmacyAdminDashboard.jsx";
+import AmbulanceManagerDashboard from "./pages/AmbulanceManagerDashboard.jsx";
 
 export default function App() {
   return (
     <Routes>
       {/* Admin page without main Header/Navbar */}
       <Route path="/pharmacy-admin" element={<PharmacyAdminDashboard />} />
+      <Route path="/ambulance-manager" element={<AmbulanceManagerDashboard />} />
 
       {/* Public app pages with main Header/Navbar */}
       <Route element={<Layout />}>
