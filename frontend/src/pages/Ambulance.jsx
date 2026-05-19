@@ -121,6 +121,39 @@ function formatDate(value) {
   }
 }
 
+function MapBox({ latitude, longitude, title = "Location", note }) {
+  const hasLocation = latitude && longitude;
+  const mapSrc = hasLocation
+    ? `https://maps.google.com/maps?q=${latitude},${longitude}&z=15&output=embed`
+    : "";
+
+  return (
+    <div className="map-box">
+      {hasLocation ? (
+        <>
+          <iframe
+            title={title}
+            src={mapSrc}
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+          />
+
+          <div className="map-overlay">
+            <strong>{title}</strong>
+            {note && <span>{note}</span>}
+          </div>
+        </>
+      ) : (
+        <div className="map-empty">
+          <MapPin size={30} />
+          <strong>No live location yet</strong>
+          <span>The ambulance manager has not shared live GPS yet.</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function Ambulance() {
   const { user } = useAuth();
 
@@ -150,6 +183,27 @@ export default function Ambulance() {
   const [notice, setNotice] = useState(null);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const ambulanceLatitude =
+  selected?.current_latitude ||
+  selected?.latitude ||
+  selectedDetails?.service?.current_latitude ||
+  selectedDetails?.service?.latitude ||
+  "";
+
+const ambulanceLongitude =
+  selected?.current_longitude ||
+  selected?.longitude ||
+  selectedDetails?.service?.current_longitude ||
+  selectedDetails?.service?.longitude ||
+  "";
+
+const ambulanceLocationNote =
+  selected?.current_location_note ||
+  selectedDetails?.service?.current_location_note ||
+  selected?.address ||
+  "";
+
+  
 
   const typeOptions = useMemo(() => {
     const values = meta.service_types?.length
@@ -168,17 +222,7 @@ export default function Ambulance() {
     const timer = setTimeout(loadServices, 250);
     return () => clearTimeout(timer);
   }, 
-  [
-    filters.search,
-    filters.division,
-    filters.district,
-    filters.service_type,
-    filters.availability,
-    filters.verified_only,
-    filters.only247,
-    filters.sort,
-    filters.order,
-  ]);
+  );
 
   async function loadMeta() {
     try {
@@ -454,6 +498,8 @@ async function submitUserLocation(event) {
     }
   }
 
+  
+
   return (
     <section className="ambulance-page">
       <style>{styles}</style>
@@ -629,53 +675,26 @@ async function submitUserLocation(event) {
             <form className="review-form" onSubmit={submitUserLocation}>
   <h3>Share Your Location With Ambulance Manager</h3>
 
-  <div className="form-row">
-    <input
-      name="sender_name"
-      value={shareForm.sender_name}
-      onChange={updateShareForm}
-      placeholder="Your name *"
-      required
-    />
+  <MapBox
+  latitude={shareForm.latitude}
+  longitude={shareForm.longitude}
+  title="Your Pickup Location"
+  note={shareForm.message || "This location will be shared with the ambulance manager."}
+/>
 
-    <input
-      name="sender_phone"
-      value={shareForm.sender_phone}
-      onChange={updateShareForm}
-      placeholder="Your phone *"
-      required
-    />
-  </div>
+<div className="location-meta">
+  <span>
+    <strong>Latitude:</strong> {shareForm.latitude || "Not set"}
+  </span>
+  <span>
+    <strong>Longitude:</strong> {shareForm.longitude || "Not set"}
+  </span>
+</div>
 
-  <input
-    name="sender_email"
-    value={shareForm.sender_email}
-    onChange={updateShareForm}
-    placeholder="Your email"
-  />
-
-  <div className="form-row">
-    <input
-      name="latitude"
-      value={shareForm.latitude}
-      onChange={updateShareForm}
-      placeholder="Latitude *"
-      required
-    />
-
-    <input
-      name="longitude"
-      value={shareForm.longitude}
-      onChange={updateShareForm}
-      placeholder="Longitude *"
-      required
-    />
-  </div>
-
-  <button type="button" className="details-btn" onClick={useCurrentUserLocation}>
-    <MapPin size={16} />
-    Use My Current Location
-  </button>
+<button type="button" className="details-btn" onClick={useCurrentUserLocation}>
+  <MapPin size={16} />
+  Use My Current Location
+</button>
 
   <textarea
     name="message"
@@ -721,27 +740,36 @@ async function submitUserLocation(event) {
               </div>
 
               <div className="details-card">
-                <h3>Location</h3>
-                <p className="address-text">{selected.address || "Address not provided."}</p>
-                {selected.latitude && selected.longitude && (
-                  <a
-                    className="map-link"
-                    href={`https://www.google.com/maps?q=${selected.latitude},${selected.longitude}`}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    <MapPin size={16} />
-                    Open in Google Maps
-                  </a>
-                )}
+  <h3>Ambulance Live Location</h3>
 
-                <h3>Equipment</h3>
-                <div className="equipment-list">
-                  {selected.equipment_items?.map((item) => (
-                    <span key={item}>{item}</span>
-                  ))}
-                </div>
-              </div>
+  <MapBox
+    latitude={ambulanceLatitude}
+    longitude={ambulanceLongitude}
+    title={selected.service_name}
+    note={ambulanceLocationNote}
+  />
+
+  <p className="address-text">{selected.address || "Address not provided."}</p>
+
+  {ambulanceLatitude && ambulanceLongitude && (
+    <a
+      className="map-link"
+      href={`https://www.google.com/maps?q=${ambulanceLatitude},${ambulanceLongitude}`}
+      target="_blank"
+      rel="noreferrer"
+    >
+      <MapPin size={16} />
+      Open Full Map
+    </a>
+  )}
+
+  <h3>Equipment</h3>
+  <div className="equipment-list">
+    {selected.equipment_items?.map((item) => (
+      <span key={item}>{item}</span>
+    ))}
+  </div>
+</div>
             </div>
 
             <div className="details-card">
@@ -1767,6 +1795,82 @@ const styles = `
 .submit-btn.green {
   background: #10b981;
   box-shadow: 0 12px 22px rgba(16, 185, 129, .22);
+}
+
+.map-box {
+  position: relative;
+  width: 100%;
+  height: 230px;
+  border-radius: 22px;
+  overflow: hidden;
+  background: linear-gradient(135deg, #fee2e2, #ffedd5);
+  border: 1px solid #fecaca;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.7);
+  margin-bottom: 12px;
+}
+
+.map-box iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.map-overlay {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 12px;
+  border-radius: 16px;
+  padding: 10px 12px;
+  color: #0f172a;
+  background: rgba(255,255,255,.92);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 10px 24px rgba(15,23,42,.12);
+}
+
+.map-overlay strong,
+.map-overlay span {
+  display: block;
+}
+
+.map-overlay span {
+  margin-top: 3px;
+  color: #64748b;
+  font-size: .82rem;
+}
+
+.map-empty {
+  height: 100%;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 7px;
+  text-align: center;
+  color: #991b1b;
+  padding: 18px;
+}
+
+.map-empty span {
+  color: #64748b;
+  font-size: .88rem;
+}
+
+.location-meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.location-meta span {
+  border-radius: 14px;
+  padding: 10px 12px;
+  background: #fff7ef;
+  color: #475569;
+  font-size: .84rem;
+}
+
+.location-meta strong {
+  color: #0f172a;
 }
 
 @media (max-width: 1120px) {

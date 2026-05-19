@@ -56,7 +56,38 @@ function formatDate(value) {
     return value;
   }
 }
+function MapBox({ latitude, longitude, title = "Location", note }) {
+  const hasLocation = latitude && longitude;
+  const mapSrc = hasLocation
+    ? `https://maps.google.com/maps?q=${latitude},${longitude}&z=15&output=embed`
+    : "";
 
+  return (
+    <div className="map-box">
+      {hasLocation ? (
+        <>
+          <iframe
+            title={title}
+            src={mapSrc}
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+          />
+
+          <div className="map-overlay">
+            <strong>{title}</strong>
+            {note && <span>{note}</span>}
+          </div>
+        </>
+      ) : (
+        <div className="map-empty">
+          <MapPin size={30} />
+          <strong>No location selected</strong>
+          <span>Click “Use Current GPS” to locate this ambulance.</span>
+        </div>
+      )}
+    </div>
+  );
+}
 export default function AmbulanceManagerDashboard() {
   const [token, setToken] = useState(() => localStorage.getItem("ambulance_manager_token") || "");
   const [login, setLogin] = useState(initialLogin);
@@ -498,53 +529,67 @@ export default function AmbulanceManagerDashboard() {
 
           <div>
             <form className="manager-card location-card" onSubmit={saveCurrentLocation}>
-              <h2>Current Ambulance Location</h2>
+  <div className="location-title-row">
+    <div>
+      <h2>Live Ambulance Location</h2>
+      <p>Share the ambulance’s current GPS position with users.</p>
+    </div>
 
-              <div className="two">
-                <label>
-                  Latitude
-                  <input name="latitude" value={locationForm.latitude} onChange={updateLocationField} required />
-                </label>
+    <span className="live-badge">
+      <MapPin size={14} />
+      Live
+    </span>
+  </div>
 
-                <label>
-                  Longitude
-                  <input name="longitude" value={locationForm.longitude} onChange={updateLocationField} required />
-                </label>
-              </div>
+  <MapBox
+    latitude={locationForm.latitude}
+    longitude={locationForm.longitude}
+    title={service.service_name || "Ambulance Location"}
+    note={locationForm.note}
+  />
 
-              <label>
-                Location Note
-                <textarea
-                  name="note"
-                  value={locationForm.note}
-                  onChange={updateLocationField}
-                  placeholder="Example: Waiting near hospital gate / on the way..."
-                />
-              </label>
+  <label>
+    Location Note
+    <textarea
+      name="note"
+      value={locationForm.note}
+      onChange={updateLocationField}
+      placeholder="Example: Waiting near hospital gate / on the way..."
+    />
+  </label>
 
-              <div className="button-row">
-                <button type="button" onClick={useCurrentAmbulanceLocation}>
-                  <MapPin size={16} />
-                  Use Current GPS
-                </button>
+  <div className="location-meta">
+    <span>
+      <strong>Latitude:</strong> {locationForm.latitude || "Not set"}
+    </span>
+    <span>
+      <strong>Longitude:</strong> {locationForm.longitude || "Not set"}
+    </span>
+  </div>
 
-                <button className="save-btn" disabled={loading}>
-                  <Save size={16} />
-                  Share Location
-                </button>
-              </div>
+  <div className="button-row">
+    <button type="button" onClick={useCurrentAmbulanceLocation}>
+      <MapPin size={16} />
+      Use Current GPS
+    </button>
 
-              {service.current_latitude && service.current_longitude && (
-                <a
-                  className="map-link"
-                  target="_blank"
-                  rel="noreferrer"
-                  href={`https://www.google.com/maps?q=${service.current_latitude},${service.current_longitude}`}
-                >
-                  Open Current Ambulance Location
-                </a>
-              )}
-            </form>
+    <button className="save-btn" disabled={loading || !locationForm.latitude || !locationForm.longitude}>
+      <Save size={16} />
+      Share Location
+    </button>
+  </div>
+
+  {locationForm.latitude && locationForm.longitude && (
+    <a
+      className="map-link"
+      target="_blank"
+      rel="noreferrer"
+      href={`https://www.google.com/maps?q=${locationForm.latitude},${locationForm.longitude}`}
+    >
+      Open Full Map
+    </a>
+  )}
+</form>
 
             <div className="manager-card">
               <h2>User Locations / Messages</h2>
@@ -569,16 +614,25 @@ export default function AmbulanceManagerDashboard() {
                       <p>{message.message}</p>
 
                       {message.user_latitude && message.user_longitude && (
-                        <a
-                          className="map-link"
-                          href={`https://www.google.com/maps?q=${message.user_latitude},${message.user_longitude}`}
-                          target="_blank"
-                          rel="noreferrer"
-                        >
-                          <MapPin size={15} />
-                          Open User Shared Location
-                        </a>
-                      )}
+  <div className="message-map-wrap">
+    <MapBox
+      latitude={message.user_latitude}
+      longitude={message.user_longitude}
+      title={`${message.sender_name}'s Location`}
+      note={message.sender_phone}
+    />
+
+    <a
+      className="map-link"
+      href={`https://www.google.com/maps?q=${message.user_latitude},${message.user_longitude}`}
+      target="_blank"
+      rel="noreferrer"
+    >
+      <MapPin size={15} />
+      Open User Location
+    </a>
+  </div>
+)}
 
                       <small>{formatDate(message.created_at)}</small>
 
@@ -953,6 +1007,118 @@ const styles = `
 
 .message-item textarea {
   margin-top: 10px;
+}
+
+.location-title-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.location-title-row h2 {
+  margin-bottom: 4px;
+}
+
+.location-title-row p {
+  margin: 0 0 14px;
+  color: #64748b;
+}
+
+.live-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  padding: 7px 10px;
+  color: #166534;
+  background: #dcfce7;
+  font-size: .8rem;
+  font-weight: 950;
+}
+
+.map-box {
+  position: relative;
+  width: 100%;
+  height: 230px;
+  border-radius: 22px;
+  overflow: hidden;
+  background: linear-gradient(135deg, #fee2e2, #ffedd5);
+  border: 1px solid #fecaca;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.7);
+}
+
+.map-box iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.map-overlay {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 12px;
+  border-radius: 16px;
+  padding: 10px 12px;
+  color: #0f172a;
+  background: rgba(255,255,255,.92);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 10px 24px rgba(15,23,42,.12);
+}
+
+.map-overlay strong,
+.map-overlay span {
+  display: block;
+}
+
+.map-overlay span {
+  margin-top: 3px;
+  color: #64748b;
+  font-size: .82rem;
+}
+
+.map-empty {
+  height: 100%;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 7px;
+  text-align: center;
+  color: #991b1b;
+  padding: 18px;
+}
+
+.map-empty span {
+  color: #64748b;
+  font-size: .88rem;
+}
+
+.location-meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.location-meta span {
+  border-radius: 14px;
+  padding: 10px 12px;
+  background: #fff7ef;
+  color: #475569;
+  font-size: .84rem;
+}
+
+.location-meta strong {
+  color: #0f172a;
+}
+
+.message-map-wrap {
+  margin: 10px 0;
+}
+
+.message-map-wrap .map-box {
+  height: 170px;
+  border-radius: 18px;
 }
 
 @media (max-width: 980px) {
