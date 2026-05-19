@@ -11,7 +11,6 @@ import {
   MessageCircle,
   Navigation,
   Phone,
-  RefreshCcw,
   Search,
   ShieldCheck,
   Star,
@@ -553,33 +552,6 @@ async function submitUserLocation(event) {
           <Stat icon={<Navigation />} label="Divisions" value={meta.stats?.total_divisions || 0} />
           <Stat icon={<Clock />} label="24/7 Available" value={meta.stats?.total_247 || 0} />
           <Stat icon={<ShieldCheck />} label="Verified" value={meta.stats?.total_verified || 0} />
-        </div>
-
-        <div className="emergency-strip">
-          <div>
-            <h2>Emergency Services Nearby</h2>
-            <p>Top verified and high-rated services for urgent response.</p>
-          </div>
-          <button className="refresh-btn" onClick={() => { loadMeta(); loadServices(); }}>
-            <RefreshCcw size={16} />
-            Refresh
-          </button>
-        </div>
-
-        <div className="emergency-grid">
-          {meta.emergency_services?.map((service) => (
-            <article className="emergency-card" key={service.id}>
-              <div>
-                <span className="mini-badge">{availabilityLabel(service.availability)}</span>
-                <h3>{service.service_name}</h3>
-                <p>{service.area}, {service.district}</p>
-              </div>
-              <a href={`tel:${telNumber(service.phone_primary)}`} className="call-now">
-                <Phone size={16} />
-                Call
-              </a>
-            </article>
-          ))}
         </div>
 
         <div className="filter-panel">

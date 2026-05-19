@@ -56,6 +56,7 @@ function formatDate(value) {
     return value;
   }
 }
+
 function MapBox({ latitude, longitude, title = "Location", note }) {
   const hasLocation = latitude && longitude;
   const mapSrc = hasLocation
@@ -88,8 +89,11 @@ function MapBox({ latitude, longitude, title = "Location", note }) {
     </div>
   );
 }
+
 export default function AmbulanceManagerDashboard() {
-  const [token, setToken] = useState(() => localStorage.getItem("ambulance_manager_token") || "");
+  const [token, setToken] = useState(
+    () => localStorage.getItem("ambulance_manager_token") || ""
+  );
   const [login, setLogin] = useState(initialLogin);
   const [manager, setManager] = useState(null);
   const [service, setService] = useState(initialService);
@@ -106,7 +110,9 @@ export default function AmbulanceManagerDashboard() {
   function managerConfig() {
     return {
       headers: {
-        Authorization: `Bearer ${localStorage.getItem("ambulance_manager_token") || token}`,
+        Authorization: `Bearer ${
+          localStorage.getItem("ambulance_manager_token") || token
+        }`,
       },
     };
   }
@@ -115,6 +121,7 @@ export default function AmbulanceManagerDashboard() {
     if (token) {
       loadDashboard();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
   function updateLogin(event) {
@@ -145,7 +152,8 @@ export default function AmbulanceManagerDashboard() {
     } catch (error) {
       setNotice({
         type: "error",
-        message: error.response?.data?.message || "Invalid ambulance manager login.",
+        message:
+          error.response?.data?.message || "Invalid ambulance manager login.",
       });
     } finally {
       setLoading(false);
@@ -158,6 +166,7 @@ export default function AmbulanceManagerDashboard() {
     setManager(null);
     setService(initialService);
     setMessages([]);
+    setReplyDrafts({});
   }
 
   async function loadDashboard() {
@@ -169,29 +178,28 @@ export default function AmbulanceManagerDashboard() {
         api.get("/ambulance/manager/messages", managerConfig()),
       ]);
 
+      const currentService = meResponse.data.data.service;
+
       setManager(meResponse.data.data.manager);
       setService({
         ...initialService,
-        ...meResponse.data.data.service,
+        ...currentService,
       });
 
       setLocationForm({
         latitude:
-          meResponse.data.data.service?.current_latitude ||
-          meResponse.data.data.service?.latitude ||
-          "",
+          currentService?.current_latitude || currentService?.latitude || "",
         longitude:
-          meResponse.data.data.service?.current_longitude ||
-          meResponse.data.data.service?.longitude ||
-          "",
-        note: meResponse.data.data.service?.current_location_note || "",
+          currentService?.current_longitude || currentService?.longitude || "",
+        note: currentService?.current_location_note || "",
       });
 
       setMessages(messagesResponse.data.data || []);
     } catch (error) {
       setNotice({
         type: "error",
-        message: error.response?.data?.message || "Could not load manager dashboard.",
+        message:
+          error.response?.data?.message || "Could not load manager dashboard.",
       });
     } finally {
       setLoading(false);
@@ -232,7 +240,9 @@ export default function AmbulanceManagerDashboard() {
     } catch (error) {
       setNotice({
         type: "error",
-        message: error.response?.data?.message || "Could not update ambulance information.",
+        message:
+          error.response?.data?.message ||
+          "Could not update ambulance information.",
       });
     } finally {
       setLoading(false);
@@ -296,7 +306,8 @@ export default function AmbulanceManagerDashboard() {
     } catch (error) {
       setNotice({
         type: "error",
-        message: error.response?.data?.message || "Could not update location.",
+        message:
+          error.response?.data?.message || "Could not update location.",
       });
     } finally {
       setLoading(false);
@@ -332,7 +343,8 @@ export default function AmbulanceManagerDashboard() {
     } catch (error) {
       setNotice({
         type: "error",
-        message: error.response?.data?.message || "Could not update message.",
+        message:
+          error.response?.data?.message || "Could not update message.",
       });
     } finally {
       setLoading(false);
@@ -355,7 +367,11 @@ export default function AmbulanceManagerDashboard() {
             and view user shared locations.
           </p>
 
-          {notice && <div className={`manager-notice ${notice.type}`}>{notice.message}</div>}
+          {notice && (
+            <div className={`manager-notice ${notice.type}`}>
+              {notice.message}
+            </div>
+          )}
 
           <form onSubmit={submitLogin}>
             <label>
@@ -401,39 +417,61 @@ export default function AmbulanceManagerDashboard() {
               <ShieldCheck size={18} />
               Ambulance Manager
             </span>
-            <h1>Manage your ambulance and live location.</h1>
-            <p>
-  Update service details, share current ambulance location, and view
-  user pickup locations/messages.
-</p>
 
-{manager && (
-  <p className="manager-name">
-    Signed in as {manager.manager_name || manager.username}
-  </p>
-)}
+            <h1>Manage your ambulance and live location.</h1>
+
+            <p>
+              Update service details, share current ambulance location, and view
+              user pickup locations/messages.
+            </p>
+
+            {manager && (
+              <p className="manager-name">
+                Signed in as {manager.manager_name || manager.username}
+              </p>
+            )}
           </div>
 
           <div className="hero-actions">
-            <button onClick={loadDashboard}>
+            <button type="button" onClick={loadDashboard}>
               <RefreshCcw size={16} />
               Refresh
             </button>
 
-            <button className="logout" onClick={logout}>
+            <button type="button" className="logout" onClick={logout}>
               <LogOut size={16} />
               Logout
             </button>
           </div>
         </div>
 
-        {notice && <div className={`manager-notice ${notice.type}`}>{notice.message}</div>}
+        {notice && (
+          <div className={`manager-notice ${notice.type}`}>
+            {notice.message}
+          </div>
+        )}
 
         <div className="manager-stats">
-          <Stat icon={<Ambulance />} label="Service" value={service.service_name || "N/A"} />
-          <Stat icon={<Truck />} label="Type" value={service.service_type || "N/A"} />
-          <Stat icon={<Clock />} label="Availability" value={service.availability || "N/A"} />
-          <Stat icon={<MessageCircle />} label="Messages" value={messages.length} />
+          <Stat
+            icon={<Ambulance />}
+            label="Service"
+            value={service.service_name || "N/A"}
+          />
+          <Stat
+            icon={<Truck />}
+            label="Type"
+            value={service.service_type || "N/A"}
+          />
+          <Stat
+            icon={<Clock />}
+            label="Availability"
+            value={service.availability || "N/A"}
+          />
+          <Stat
+            icon={<MessageCircle />}
+            label="Messages"
+            value={messages.length}
+          />
         </div>
 
         <div className="manager-grid">
@@ -442,24 +480,41 @@ export default function AmbulanceManagerDashboard() {
 
             <label>
               Service Name
-              <input name="service_name" value={service.service_name || ""} onChange={updateServiceField} required />
+              <input
+                name="service_name"
+                value={service.service_name || ""}
+                onChange={updateServiceField}
+                required
+              />
             </label>
 
             <div className="two">
               <label>
                 Service Type
-                <select name="service_type" value={service.service_type || "advanced"} onChange={updateServiceField}>
+                <select
+                  name="service_type"
+                  value={service.service_type || "advanced"}
+                  onChange={updateServiceField}
+                >
                   {serviceTypes.map((type) => (
-                    <option key={type} value={type}>{type}</option>
+                    <option key={type} value={type}>
+                      {type}
+                    </option>
                   ))}
                 </select>
               </label>
 
               <label>
                 Availability
-                <select name="availability" value={service.availability || "24/7"} onChange={updateServiceField}>
+                <select
+                  name="availability"
+                  value={service.availability || "24/7"}
+                  onChange={updateServiceField}
+                >
                   {availabilityTypes.map((type) => (
-                    <option key={type} value={type}>{type}</option>
+                    <option key={type} value={type}>
+                      {type}
+                    </option>
                   ))}
                 </select>
               </label>
@@ -468,57 +523,100 @@ export default function AmbulanceManagerDashboard() {
             <div className="two">
               <label>
                 Division
-                <input name="division" value={service.division || ""} onChange={updateServiceField} required />
+                <input
+                  name="division"
+                  value={service.division || ""}
+                  onChange={updateServiceField}
+                  required
+                />
               </label>
 
               <label>
                 District
-                <input name="district" value={service.district || ""} onChange={updateServiceField} required />
+                <input
+                  name="district"
+                  value={service.district || ""}
+                  onChange={updateServiceField}
+                  required
+                />
               </label>
             </div>
 
             <label>
               Area
-              <input name="area" value={service.area || ""} onChange={updateServiceField} />
+              <input
+                name="area"
+                value={service.area || ""}
+                onChange={updateServiceField}
+              />
             </label>
 
             <label>
               Address
-              <textarea name="address" value={service.address || ""} onChange={updateServiceField} />
+              <textarea
+                name="address"
+                value={service.address || ""}
+                onChange={updateServiceField}
+              />
             </label>
 
             <div className="two">
               <label>
                 Primary Phone
-                <input name="phone_primary" value={service.phone_primary || ""} onChange={updateServiceField} required />
+                <input
+                  name="phone_primary"
+                  value={service.phone_primary || ""}
+                  onChange={updateServiceField}
+                  required
+                />
               </label>
 
               <label>
                 Secondary Phone
-                <input name="phone_secondary" value={service.phone_secondary || ""} onChange={updateServiceField} />
+                <input
+                  name="phone_secondary"
+                  value={service.phone_secondary || ""}
+                  onChange={updateServiceField}
+                />
               </label>
             </div>
 
             <div className="two">
               <label>
                 Base Charge
-                <input name="base_charge" value={service.base_charge || ""} onChange={updateServiceField} />
+                <input
+                  name="base_charge"
+                  value={service.base_charge || ""}
+                  onChange={updateServiceField}
+                />
               </label>
 
               <label>
                 Price Per KM
-                <input name="price_per_km" value={service.price_per_km || ""} onChange={updateServiceField} />
+                <input
+                  name="price_per_km"
+                  value={service.price_per_km || ""}
+                  onChange={updateServiceField}
+                />
               </label>
             </div>
 
             <label>
               Equipment
-              <textarea name="equipment" value={service.equipment || ""} onChange={updateServiceField} />
+              <textarea
+                name="equipment"
+                value={service.equipment || ""}
+                onChange={updateServiceField}
+              />
             </label>
 
             <label>
               Description
-              <textarea name="description" value={service.description || ""} onChange={updateServiceField} />
+              <textarea
+                name="description"
+                value={service.description || ""}
+                onChange={updateServiceField}
+              />
             </label>
 
             <button className="save-btn" disabled={loading}>
@@ -528,107 +626,131 @@ export default function AmbulanceManagerDashboard() {
           </form>
 
           <div>
-            <form className="manager-card location-card" onSubmit={saveCurrentLocation}>
-  <div className="location-title-row">
-    <div>
-      <h2>Live Ambulance Location</h2>
-      <p>Share the ambulance’s current GPS position with users.</p>
-    </div>
+            <form
+              className="manager-card location-card"
+              onSubmit={saveCurrentLocation}
+            >
+              <div className="location-title-row">
+                <div>
+                  <h2>Live Ambulance Location</h2>
+                  <p>Share the ambulance’s current GPS position with users.</p>
+                </div>
 
-    <span className="live-badge">
-      <MapPin size={14} />
-      Live
-    </span>
-  </div>
+                <span className="live-badge">
+                  <MapPin size={14} />
+                  Live
+                </span>
+              </div>
 
-  <MapBox
-    latitude={locationForm.latitude}
-    longitude={locationForm.longitude}
-    title={service.service_name || "Ambulance Location"}
-    note={locationForm.note}
-  />
+              <MapBox
+                latitude={locationForm.latitude}
+                longitude={locationForm.longitude}
+                title={service.service_name || "Ambulance Location"}
+                note={locationForm.note}
+              />
 
-  <label>
-    Location Note
-    <textarea
-      name="note"
-      value={locationForm.note}
-      onChange={updateLocationField}
-      placeholder="Example: Waiting near hospital gate / on the way..."
-    />
-  </label>
+              <label>
+                Location Note
+                <textarea
+                  name="note"
+                  value={locationForm.note}
+                  onChange={updateLocationField}
+                  placeholder="Example: Waiting near hospital gate / on the way..."
+                />
+              </label>
 
-  <div className="location-meta">
-    <span>
-      <strong>Latitude:</strong> {locationForm.latitude || "Not set"}
-    </span>
-    <span>
-      <strong>Longitude:</strong> {locationForm.longitude || "Not set"}
-    </span>
-  </div>
+              <div className="location-meta">
+                <span>
+                  <strong>Latitude:</strong>{" "}
+                  {locationForm.latitude || "Not set"}
+                </span>
+                <span>
+                  <strong>Longitude:</strong>{" "}
+                  {locationForm.longitude || "Not set"}
+                </span>
+              </div>
 
-  <div className="button-row">
-    <button type="button" onClick={useCurrentAmbulanceLocation}>
-      <MapPin size={16} />
-      Use Current GPS
-    </button>
+              <div className="button-row">
+                <button
+                  type="button"
+                  onClick={useCurrentAmbulanceLocation}
+                >
+                  <MapPin size={16} />
+                  Use Current GPS
+                </button>
 
-    <button className="save-btn" disabled={loading || !locationForm.latitude || !locationForm.longitude}>
-      <Save size={16} />
-      Share Location
-    </button>
-  </div>
+                <button
+                  className="save-btn"
+                  disabled={
+                    loading ||
+                    !locationForm.latitude ||
+                    !locationForm.longitude
+                  }
+                >
+                  <Save size={16} />
+                  Share Location
+                </button>
+              </div>
 
-  {locationForm.latitude && locationForm.longitude && (
-    <a
-      className="map-link"
-      target="_blank"
-      rel="noreferrer"
-      href={`https://www.google.com/maps?q=${locationForm.latitude},${locationForm.longitude}`}
-    >
-      Open Full Map
-    </a>
-  )}
-</form>
-
-  <div className="manager-card chat-panel">
-     <div className="chat-panel-head">
-         <div>
-             <span className="section-kicker">
-                <MessageCircle size={15} />
-                   Ambulance Inbox
-              </span>
-                  <h2>User Locations / Messages</h2>
-                  <p>View pickup locations, user messages, and reply status.</p>
-           </div>
-
-          <button type="button" className="mini-refresh" onClick={loadDashboard}>
-          <RefreshCcw size={15} />
-          Refresh
-         </button>
-       </div>
-
-           {messages.length === 0 ? (
-       <div className="empty-msg modern-empty">
-      <MessageCircle size={34} />
-      <strong>No user location or message yet.</strong>
-      <span>When a user shares location, it will appear here.</span>
-    </div>
-  ) : (
-    <div className="chat-list">
-           {messages.map((message) => (
-           <MessageCard
-          key={message.id}
-          message={message}
-          replyValue={replyDrafts[message.id] || message.manager_reply || ""}
-          onReplyChange={(value) => updateReply(message.id, value)}
-          onStatusChange={(status) => updateMessageStatus(message.id, status)}
-        />
-      ))}
-    </div>
-  )}
-</div>          
+              {locationForm.latitude && locationForm.longitude && (
+                <a
+                  className="map-link"
+                  target="_blank"
+                  rel="noreferrer"
+                  href={`https://www.google.com/maps?q=${locationForm.latitude},${locationForm.longitude}`}
+                >
+                  Open Full Map
+                </a>
+              )}
+            </form>
           </div>
+        </div>
+
+        <div className="manager-card chat-panel">
+          <div className="chat-panel-head">
+            <div>
+              <span className="section-kicker">
+                <MessageCircle size={15} />
+                Ambulance Inbox
+              </span>
+
+              <h2>Pickup Requests & Messages</h2>
+              <p>View pickup locations, user messages, and reply status.</p>
+            </div>
+
+            <button
+              type="button"
+              className="mini-refresh"
+              onClick={loadDashboard}
+            >
+              <RefreshCcw size={15} />
+              Refresh
+            </button>
+          </div>
+
+          {messages.length === 0 ? (
+            <div className="empty-msg modern-empty">
+              <MessageCircle size={34} />
+              <strong>No user location or message yet.</strong>
+              <span>When a user shares location, it will appear here.</span>
+            </div>
+          ) : (
+            <div className="chat-list">
+              {messages.map((message) => (
+                <MessageCard
+                  key={message.id}
+                  message={message}
+                  replyValue={
+                    replyDrafts[message.id] || message.manager_reply || ""
+                  }
+                  onReplyChange={(value) => updateReply(message.id, value)}
+                  onStatusChange={(status) =>
+                    updateMessageStatus(message.id, status)
+                  }
+                />
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </section>
@@ -672,7 +794,10 @@ function MessageCard({ message, replyValue, onReplyChange, onStatusChange }) {
 
       <div className="chat-bubble user-bubble">
         <span>User message</span>
-        <p>{message.message || "User shared current location with ambulance manager."}</p>
+        <p>
+          {message.message ||
+            "User shared current location with ambulance manager."}
+        </p>
       </div>
 
       {hasUserLocation && (
