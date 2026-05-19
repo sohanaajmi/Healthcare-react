@@ -591,73 +591,43 @@ export default function AmbulanceManagerDashboard() {
   )}
 </form>
 
-            <div className="manager-card">
-              <h2>User Locations / Messages</h2>
+  <div className="manager-card chat-panel">
+     <div className="chat-panel-head">
+         <div>
+             <span className="section-kicker">
+                <MessageCircle size={15} />
+                   Ambulance Inbox
+              </span>
+                  <h2>User Locations / Messages</h2>
+                  <p>View pickup locations, user messages, and reply status.</p>
+           </div>
 
-              {messages.length === 0 ? (
-                <div className="empty-msg">No user location or message yet.</div>
-              ) : (
-                <div className="message-list">
-                  {messages.map((message) => (
-                    <article className="message-item" key={message.id}>
-                      <div className="message-head">
-                        <div>
-                          <h3>{message.sender_name}</h3>
-                          <p>{message.sender_phone}</p>
-                        </div>
+          <button type="button" className="mini-refresh" onClick={loadDashboard}>
+          <RefreshCcw size={15} />
+          Refresh
+         </button>
+       </div>
 
-                        <span className={`message-status ${message.status}`}>
-                          {message.status}
-                        </span>
-                      </div>
-
-                      <p>{message.message}</p>
-
-                      {message.user_latitude && message.user_longitude && (
-  <div className="message-map-wrap">
-    <MapBox
-      latitude={message.user_latitude}
-      longitude={message.user_longitude}
-      title={`${message.sender_name}'s Location`}
-      note={message.sender_phone}
-    />
-
-    <a
-      className="map-link"
-      href={`https://www.google.com/maps?q=${message.user_latitude},${message.user_longitude}`}
-      target="_blank"
-      rel="noreferrer"
-    >
-      <MapPin size={15} />
-      Open User Location
-    </a>
-  </div>
-)}
-
-                      <small>{formatDate(message.created_at)}</small>
-
-                      <textarea
-                        value={replyDrafts[message.id] || message.manager_reply || ""}
-                        onChange={(event) => updateReply(message.id, event.target.value)}
-                        placeholder="Reply / internal note..."
-                      />
-
-                      <div className="button-row">
-                        <button onClick={() => updateMessageStatus(message.id, "replied")}>
-                          <CheckCircle size={15} />
-                          Mark Replied
-                        </button>
-
-                        <button className="close-btn" onClick={() => updateMessageStatus(message.id, "closed")}>
-                          <XCircle size={15} />
-                          Close
-                        </button>
-                      </div>
-                    </article>
-                  ))}
-                </div>
-              )}
-            </div>
+           {messages.length === 0 ? (
+       <div className="empty-msg modern-empty">
+      <MessageCircle size={34} />
+      <strong>No user location or message yet.</strong>
+      <span>When a user shares location, it will appear here.</span>
+    </div>
+  ) : (
+    <div className="chat-list">
+           {messages.map((message) => (
+           <MessageCard
+          key={message.id}
+          message={message}
+          replyValue={replyDrafts[message.id] || message.manager_reply || ""}
+          onReplyChange={(value) => updateReply(message.id, value)}
+          onStatusChange={(status) => updateMessageStatus(message.id, status)}
+        />
+      ))}
+    </div>
+  )}
+</div>          
           </div>
         </div>
       </div>
@@ -672,6 +642,89 @@ function Stat({ icon, label, value }) {
       <div>
         <strong>{value}</strong>
         <small>{label}</small>
+      </div>
+    </article>
+  );
+}
+
+function MessageCard({ message, replyValue, onReplyChange, onStatusChange }) {
+  const hasUserLocation = message.user_latitude && message.user_longitude;
+
+  return (
+    <article className="chat-card">
+      <div className="chat-card-head">
+        <div className="user-avatar">
+          {String(message.sender_name || "U").charAt(0).toUpperCase()}
+        </div>
+
+        <div className="chat-user-main">
+          <div className="chat-user-row">
+            <h3>{message.sender_name}</h3>
+            <span className={`message-status ${message.status}`}>
+              {message.status}
+            </span>
+          </div>
+
+          <p>{message.sender_phone}</p>
+          <small>{formatDate(message.created_at)}</small>
+        </div>
+      </div>
+
+      <div className="chat-bubble user-bubble">
+        <span>User message</span>
+        <p>{message.message || "User shared current location with ambulance manager."}</p>
+      </div>
+
+      {hasUserLocation && (
+        <div className="pickup-map-card">
+          <MapBox
+            latitude={message.user_latitude}
+            longitude={message.user_longitude}
+            title={`${message.sender_name}'s Pickup Location`}
+            note={message.sender_phone}
+          />
+
+          <a
+            className="map-open-btn"
+            href={`https://www.google.com/maps?q=${message.user_latitude},${message.user_longitude}`}
+            target="_blank"
+            rel="noreferrer"
+          >
+            <MapPin size={15} />
+            Open pickup location
+          </a>
+        </div>
+      )}
+
+      {message.manager_reply && (
+        <div className="chat-bubble manager-bubble">
+          <span>Manager reply</span>
+          <p>{message.manager_reply}</p>
+        </div>
+      )}
+
+      <div className="reply-composer">
+        <textarea
+          value={replyValue}
+          onChange={(event) => onReplyChange(event.target.value)}
+          placeholder="Write a short reply or internal note..."
+        />
+
+        <div className="reply-actions">
+          <button type="button" onClick={() => onStatusChange("replied")}>
+            <CheckCircle size={15} />
+            Mark replied
+          </button>
+
+          <button
+            type="button"
+            className="close-btn"
+            onClick={() => onStatusChange("closed")}
+          >
+            <XCircle size={15} />
+            Close
+          </button>
+        </div>
       </div>
     </article>
   );
@@ -1179,6 +1232,381 @@ const styles = `
 .manager-stat > span {
   background: #dbeafe;
   color: #2563eb;
+}
+
+/* ===== MODERN MANAGER CHAT / LOCATION UI ===== */
+
+.manager-grid {
+  grid-template-columns: minmax(0, .95fr) minmax(420px, 1.05fr);
+  align-items: start;
+}
+
+.location-card {
+  gap: 14px !important;
+}
+
+.location-title-row {
+  align-items: flex-start;
+  margin-bottom: 2px;
+}
+
+.location-title-row h2,
+.chat-panel h2 {
+  font-size: 1.45rem;
+  letter-spacing: -.035em;
+  margin: 0;
+}
+
+.location-title-row p,
+.chat-panel-head p {
+  margin: 5px 0 0;
+  color: #64748b;
+  font-weight: 700;
+}
+
+.live-badge,
+.section-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border-radius: 999px;
+  padding: 7px 11px;
+  font-size: .78rem;
+  font-weight: 950;
+}
+
+.live-badge {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.section-kicker {
+  background: #eff6ff;
+  color: #2563eb;
+  margin-bottom: 10px;
+}
+
+.location-card .map-box {
+  height: 260px;
+  border-radius: 24px;
+}
+
+.location-card textarea {
+  min-height: 72px;
+}
+
+.location-meta {
+  grid-template-columns: 1fr 1fr;
+}
+
+.location-meta span {
+  border-radius: 16px;
+  padding: 12px 14px;
+  background: #eff6ff;
+  color: #475569;
+  font-size: .86rem;
+}
+
+.location-meta strong {
+  color: #0f172a;
+}
+
+.chat-panel {
+  padding: 0;
+  overflow: hidden;
+}
+
+.chat-panel-head {
+  padding: 20px;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: flex-start;
+  background: linear-gradient(180deg, #ffffff, #f8fafc);
+}
+
+.mini-refresh {
+  border: 1px solid #dbe3ef;
+  background: #fff;
+  color: #2563eb;
+  border-radius: 14px;
+  padding: 10px 13px;
+  font-weight: 950;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.chat-list {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  max-height: 820px;
+  overflow-y: auto;
+  background: #f8fafc;
+}
+
+.chat-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.chat-list::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 999px;
+}
+
+.chat-card {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 22px;
+  padding: 16px;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, .06);
+}
+
+.chat-card-head {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+
+.user-avatar {
+  width: 46px;
+  height: 46px;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 46px;
+  background: linear-gradient(135deg, #2563eb, #10b981);
+  color: white;
+  font-weight: 950;
+  font-size: 1.1rem;
+}
+
+.chat-user-main {
+  min-width: 0;
+  flex: 1;
+}
+
+.chat-user-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.chat-user-row h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  color: #0f172a;
+}
+
+.chat-user-main p {
+  margin: 3px 0;
+  color: #475569;
+  font-weight: 800;
+}
+
+.chat-user-main small {
+  color: #94a3b8;
+  font-weight: 800;
+}
+
+.message-status {
+  border-radius: 999px;
+  padding: 7px 10px;
+  font-size: .72rem;
+  font-weight: 950;
+  text-transform: capitalize;
+  white-space: nowrap;
+}
+
+.message-status.open {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.message-status.replied {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.message-status.closed {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.chat-bubble {
+  border-radius: 18px;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+}
+
+.chat-bubble span {
+  display: block;
+  font-size: .72rem;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  font-weight: 950;
+  margin-bottom: 5px;
+}
+
+.chat-bubble p {
+  margin: 0;
+  line-height: 1.55;
+}
+
+.user-bubble {
+  background: #eff6ff;
+  color: #1e3a8a;
+}
+
+.user-bubble span {
+  color: #2563eb;
+}
+
+.manager-bubble {
+  background: #ecfdf5;
+  color: #065f46;
+}
+
+.manager-bubble span {
+  color: #059669;
+}
+
+.pickup-map-card {
+  border-radius: 20px;
+  border: 1px solid #dbeafe;
+  background: #eff6ff;
+  padding: 10px;
+  margin: 12px 0;
+}
+
+.pickup-map-card .map-box {
+  height: 210px;
+  border-radius: 18px;
+  margin-bottom: 10px;
+}
+
+.pickup-map-card .map-overlay {
+  padding: 9px 11px;
+}
+
+.map-box iframe {
+  pointer-events: none;
+}
+
+.map-open-btn {
+  width: 100%;
+  min-height: 42px;
+  border-radius: 14px;
+  background: #fff;
+  color: #2563eb;
+  border: 1px solid #bfdbfe;
+  font-weight: 950;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.reply-composer {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.reply-composer textarea {
+  min-height: 76px;
+  border: 1px solid #dbe3ef;
+  border-radius: 16px;
+  padding: 12px 14px;
+  resize: vertical;
+  background: #fff;
+  font-weight: 700;
+}
+
+.reply-composer textarea:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, .12);
+}
+
+.reply-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.reply-actions button {
+  min-height: 46px;
+  border: 1px solid #bfdbfe;
+  border-radius: 15px;
+  background: #eff6ff;
+  color: #2563eb;
+  font-weight: 950;
+  cursor: pointer;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+}
+
+.reply-actions .close-btn {
+  border-color: #fecaca;
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.modern-empty {
+  margin: 16px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  gap: 8px;
+  min-height: 220px;
+}
+
+.modern-empty svg {
+  color: #2563eb;
+}
+
+.modern-empty strong {
+  color: #0f172a;
+}
+
+.modern-empty span {
+  color: #64748b;
+  font-weight: 700;
+}
+
+@media (max-width: 1120px) {
+  .manager-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .chat-list {
+    max-height: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .chat-panel-head,
+  .chat-user-row {
+    flex-direction: column;
+  }
+
+  .reply-actions,
+  .location-meta {
+    grid-template-columns: 1fr;
+  }
+
+  .pickup-map-card .map-box,
+  .location-card .map-box {
+    height: 220px;
+  }
 }
 
 .manager-login-card button,
