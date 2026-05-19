@@ -1142,4 +1142,152 @@ const styles = `
     grid-template-columns: 1fr;
   }
 }
+
+/* ===== BLUE MODERN MANAGER THEME OVERRIDE ===== */
+
+.manager-login-page,
+.manager-page {
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+.manager-hero {
+  background: linear-gradient(135deg, #2563eb, #4f46e5 55%, #10b981);
+  box-shadow: 0 26px 60px rgba(37, 99, 235, .22);
+}
+
+.manager-hero p {
+  color: #dbeafe;
+}
+
+.manager-hero span {
+  background: rgba(255,255,255,.16);
+  border-color: rgba(255,255,255,.22);
+}
+
+.login-icon {
+  background: linear-gradient(135deg, #2563eb, #10b981);
+}
+
+.manager-login-card,
+.manager-card,
+.manager-stat {
+  border-color: #e2e8f0;
+  box-shadow: 0 14px 34px rgba(15, 23, 42, .07);
+}
+
+.manager-stat > span {
+  background: #dbeafe;
+  color: #2563eb;
+}
+
+.manager-login-card button,
+.save-btn,
+.button-row .save-btn {
+  background: #2563eb;
+  color: white;
+  box-shadow: 0 12px 24px rgba(37, 99, 235, .22);
+}
+
+.manager-login-card button:hover,
+.save-btn:hover,
+.button-row .save-btn:hover {
+  background: #1d4ed8;
+}
+
+.hero-actions button {
+  background: white;
+  color: #2563eb;
+}
+
+.hero-actions .logout {
+  background: #0f172a;
+  color: white;
+}
+
+.manager-notice.success {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.manager-notice.error {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.button-row button {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border-color: #bfdbfe;
+}
+
+.button-row button:hover {
+  background: #dbeafe;
+}
+
+.button-row .close-btn {
+  background: #fee2e2;
+  color: #b91c1c;
+  border-color: #fecaca;
+}
+
+.map-link {
+  color: #2563eb;
+}
+
+.message-status {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.message-status.replied {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.message-status.closed {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.map-box {
+  border-color: #bfdbfe;
+  background: linear-gradient(135deg, #dbeafe, #dcfce7);
+}
+
+.map-empty {
+  color: #2563eb;
+}
+
+.live-badge {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.location-meta span {
+  background: #eff6ff;
+}
+
+.manager-card input,
+.manager-card select,
+.manager-card textarea,
+.manager-login-card input {
+  border-color: #dbe3ef;
+}
+
+.manager-card input:focus,
+.manager-card select:focus,
+.manager-card textarea:focus,
+.manager-login-card input:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, .12);
+}
+
+.manager-card {
+  transition: box-shadow .18s ease, transform .18s ease;
+}
+
+.manager-card:hover {
+  box-shadow: 0 22px 48px rgba(15, 23, 42, .1);
+}
 `;

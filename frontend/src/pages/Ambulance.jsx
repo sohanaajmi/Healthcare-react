@@ -1908,4 +1908,262 @@ const styles = `
     font-size: 2rem;
   }
 }
+/* ===== BLUE MODERN THEME OVERRIDE ===== */
+
+.ambulance-page {
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+.hero-left {
+  background: linear-gradient(135deg, #2563eb, #4f46e5 55%, #10b981);
+  box-shadow: 0 26px 60px rgba(37, 99, 235, .22);
+}
+
+.hero-left p {
+  color: #dbeafe;
+}
+
+.hero-kicker {
+  background: rgba(255, 255, 255, .16);
+  border-color: rgba(255, 255, 255, .22);
+}
+
+.hotline-card {
+  background: #0f172a;
+  border: 1px solid #1e293b;
+  box-shadow: 0 22px 44px rgba(15, 23, 42, .18);
+}
+
+.hotline-card span {
+  color: #bfdbfe;
+}
+
+.stat-card,
+.filter-panel,
+.service-card,
+.emergency-card,
+.empty-card,
+.details-modal,
+.update-modal,
+.details-card {
+  border-color: #e2e8f0;
+  box-shadow: 0 14px 34px rgba(15, 23, 42, .07);
+}
+
+.stat-card > span,
+.service-icon {
+  background: #dbeafe;
+  color: #2563eb;
+}
+
+.ambulance-notice.success {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.ambulance-notice.error {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.emergency-strip {
+  align-items: center;
+}
+
+.emergency-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.emergency-card {
+  position: relative;
+  min-height: 128px;
+  padding: 18px;
+  align-items: center;
+}
+
+.emergency-card h3 {
+  padding-right: 82px;
+}
+
+.call-now {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  min-width: 72px;
+  height: 38px;
+  border-radius: 999px;
+  background: #2563eb;
+  color: #fff;
+  box-shadow: 0 12px 22px rgba(37, 99, 235, .22);
+}
+
+.call-now:hover,
+.call-btn:hover,
+.call-main:hover {
+  background: #1d4ed8;
+}
+
+.mini-badge {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.filter-panel {
+  grid-template-columns:
+    minmax(220px, 1.5fr)
+    minmax(150px, .8fr)
+    minmax(130px, .7fr)
+    minmax(160px, .9fr)
+    minmax(160px, .9fr)
+    minmax(150px, .8fr)
+    minmax(110px, .55fr)
+    auto
+    auto
+    auto;
+  gap: 10px;
+  overflow: visible;
+}
+
+.filter-panel input,
+.filter-panel select {
+  min-width: 0;
+  background: #fff;
+  border-color: #dbe3ef;
+}
+
+.search-field input {
+  height: 52px;
+}
+
+.check-pill {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #dbeafe;
+  min-height: 52px;
+  justify-content: center;
+}
+
+.clear-btn,
+.refresh-btn,
+.details-btn {
+  min-height: 52px;
+  background: #fff;
+  color: #334155;
+  border-color: #dbe3ef;
+  box-shadow: none;
+}
+
+.clear-btn:hover,
+.refresh-btn:hover,
+.details-btn:hover {
+  background: #eff6ff;
+  color: #2563eb;
+  border-color: #bfdbfe;
+}
+
+.type-badge {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.type-badge.icu,
+.type-badge.cardiac,
+.type-badge.neonatal {
+  background: #e0e7ff;
+  color: #4338ca;
+}
+
+.verified {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.call-btn,
+.call-main,
+.submit-btn {
+  background: #2563eb;
+  color: #fff;
+  box-shadow: 0 12px 22px rgba(37, 99, 235, .22);
+}
+
+.submit-btn.green {
+  background: #10b981;
+  box-shadow: 0 12px 22px rgba(16, 185, 129, .22);
+}
+
+.update-link {
+  background: #0f172a;
+  color: #fff;
+}
+
+.fare-box,
+.check-pill,
+.location-meta span {
+  background: #eff6ff;
+}
+
+.map-box {
+  border-color: #bfdbfe;
+  background: linear-gradient(135deg, #dbeafe, #dcfce7);
+}
+
+.map-empty {
+  color: #2563eb;
+}
+
+.card-actions {
+  align-items: center;
+}
+
+.card-actions .call-btn,
+.card-actions .details-btn {
+  min-height: 48px;
+  border-radius: 16px;
+}
+
+.service-card {
+  transition: transform .18s ease, box-shadow .18s ease;
+}
+
+.service-card:hover,
+.emergency-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 22px 48px rgba(15, 23, 42, .12);
+}
+
+@media (max-width: 1180px) {
+  .filter-panel {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .check-pill,
+  .clear-btn {
+    width: 100%;
+  }
+}
+
+@media (max-width: 760px) {
+  .filter-panel,
+  .emergency-grid,
+  .ambulance-grid,
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .emergency-card h3 {
+    padding-right: 0;
+  }
+
+  .call-now {
+    position: static;
+    margin-top: 12px;
+    width: 100%;
+  }
+
+  .hotline-card {
+    justify-content: center;
+  }
+}
+
 `;
