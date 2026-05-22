@@ -163,6 +163,7 @@ export default function Ambulance() {
     availability_types: [],
     emergency_services: [],
   });
+  
   const [services, setServices] = useState([]);
   const [filters, setFilters] = useState(initialFilters);
   const [selected, setSelected] = useState(null);
@@ -202,7 +203,15 @@ const ambulanceLocationNote =
   selected?.address ||
   "";
 
-  
+const [chatTarget, setChatTarget] = useState(null);
+const [chatDetails, setChatDetails] = useState(null);
+const [chatForm, setChatForm] = useState({
+  sender_name: "",
+  sender_phone: "",
+  sender_email: "",
+  message_type: "question",
+  message: "",
+});
 
   const typeOptions = useMemo(() => {
     const values = meta.service_types?.length
@@ -247,6 +256,76 @@ const ambulanceLocationNote =
       });
     }
   }
+
+  async function openChat(service) {
+  setChatTarget(service);
+  setChatDetails(null);
+  setNotice(null);
+
+  setChatForm({
+    sender_name: user?.name || "",
+    sender_phone: "",
+    sender_email: user?.email || "",
+    message_type: "question",
+    message: "",
+  });
+
+  try {
+    const response = await api.get(`/ambulance/services/${service.id}`);
+    setChatDetails(response.data.data);
+  } catch (error) {
+    setNotice({
+      type: "error",
+      message: error.response?.data?.message || "Could not load chat messages.",
+    });
+  }
+}
+
+function updateChatForm(event) {
+  const { name, value } = event.target;
+
+  setChatForm((current) => ({
+    ...current,
+    [name]: value,
+  }));
+}
+
+async function submitChatMessage(event) {
+  event.preventDefault();
+
+  if (!chatTarget) return;
+
+  setSubmitting(true);
+  setNotice(null);
+
+  try {
+    const response = await api.post(
+      `/ambulance/services/${chatTarget.id}/messages`,
+      chatForm
+    );
+
+    setNotice({
+      type: "success",
+      message: response.data.message || "Message sent to ambulance manager.",
+    });
+
+    setChatForm((current) => ({
+      ...current,
+      message: "",
+      message_type: "question",
+    }));
+
+    const detailsResponse = await api.get(`/ambulance/services/${chatTarget.id}`);
+    setChatDetails(detailsResponse.data.data);
+  } catch (error) {
+    setNotice({
+      type: "error",
+      message: error.response?.data?.message || "Could not send message.",
+    });
+  } finally {
+    setSubmitting(false);
+  }
+}
 
   async function loadServices() {
     setLoading(true);
@@ -643,6 +722,7 @@ async function submitUserLocation(event) {
   key={service.id}
   service={service}
   onDetails={() => openDetails(service)}
+  onChat={() => openChat(service)}
 />
             ))}
           </div>
@@ -1044,6 +1124,134 @@ async function submitUserLocation(event) {
                   placeholder="Write your message..."
                   required
                 />
+                {chatTarget && (
+  <div className="modal-overlay">
+    <div className="user-chat-modal">
+      <button className="modal-close" onClick={() => setChatTarget(null)}>
+        <X size={20} />
+      </button>
+
+      <div className="user-chat-head">
+        <div>
+          <span className="chat-kicker">
+            <MessageCircle size={16} />
+            Chat Request
+          </span>
+          <h2>{chatTarget.service_name}</h2>
+          <p>
+            Send message, pickup note, pricing question, or availability request
+            to the ambulance manager.
+          </p>
+        </div>
+
+        <a className="call-main" href={`tel:${telNumber(chatTarget.phone_primary)}`}>
+          <Phone size={18} />
+          Call
+        </a>
+      </div>
+
+      <div className="user-chat-layout">
+        <div className="user-chat-history">
+          <h3>Conversation</h3>
+
+          {chatDetails?.messages?.length ? (
+            <div className="user-chat-list">
+              {chatDetails.messages.map((message) => (
+                <article className="user-chat-item" key={message.id}>
+                  <div className="user-message-bubble">
+                    <span>You / User</span>
+                    <p>{message.message}</p>
+                    <small>{formatDate(message.created_at)} · {message.status}</small>
+                  </div>
+
+                  {message.manager_reply && (
+                    <div className="manager-message-bubble">
+                      <span>Ambulance Manager</span>
+                      <p>{message.manager_reply}</p>
+                      <small>{formatDate(message.replied_at)}</small>
+                    </div>
+                  )}
+                </article>
+              ))}
+            </div>
+          ) : (
+            <div className="chat-empty">
+              <MessageCircle size={34} />
+              <strong>No messages yet</strong>
+              <span>Send your first request to the ambulance manager.</span>
+            </div>
+          )}
+        </div>
+
+        <form className="user-chat-form" onSubmit={submitChatMessage}>
+          <h3>Send Message</h3>
+
+          <div className="form-row">
+            <input
+              name="sender_name"
+              value={chatForm.sender_name}
+              onChange={updateChatForm}
+              placeholder="Your name *"
+              required
+            />
+
+            <input
+              name="sender_phone"
+              value={chatForm.sender_phone}
+              onChange={updateChatForm}
+              placeholder="Your phone *"
+              required
+            />
+          </div>
+
+          <input
+            name="sender_email"
+            value={chatForm.sender_email}
+            onChange={updateChatForm}
+            placeholder="Your email"
+          />
+
+          <select
+            name="message_type"
+            value={chatForm.message_type}
+            onChange={updateChatForm}
+          >
+            <option value="question">General Question</option>
+            <option value="location_update">Pickup Location</option>
+            <option value="pricing">Pricing</option>
+            <option value="availability">Availability</option>
+            <option value="other">Other</option>
+          </select>
+
+          <textarea
+            name="message"
+            value={chatForm.message}
+            onChange={updateChatForm}
+            placeholder="Write your message/request..."
+            required
+          />
+
+          <button className="submit-btn green" disabled={submitting}>
+            <MessageCircle size={16} />
+            Send Message Request
+          </button>
+
+          <button
+            type="button"
+            className="details-btn"
+            onClick={() => {
+              setChatTarget(null);
+              openDetails(chatTarget);
+            }}
+          >
+            <MapPin size={16} />
+            Share Pickup Location Instead
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+)}
 
                 <button className="submit-btn green" disabled={submitting}>
                   <MessageCircle size={16} />
@@ -1079,7 +1287,7 @@ function Info({ label, value }) {
   );
 }
 
-function AmbulanceCard({ service, onDetails }) {
+function AmbulanceCard({ service, onDetails, onChat }) {
   return (
     <article className="service-card">
       <div className="service-top">
@@ -1147,15 +1355,20 @@ function AmbulanceCard({ service, onDetails }) {
       </div>
 
       <div className="card-actions">
-        <a href={`tel:${telNumber(service.phone_primary)}`} className="call-btn">
-          <Phone size={16} />
-          Call
-        </a>
+  <a href={`tel:${telNumber(service.phone_primary)}`} className="call-btn">
+    <Phone size={16} />
+    Call
+  </a>
 
-        <button onClick={onDetails} className="details-btn">
-          Details
-        </button>
-      </div>
+  <button type="button" onClick={onDetails} className="details-btn">
+    Details
+  </button>
+</div>
+
+<button type="button" onClick={onChat} className="chat-manager-btn">
+  <MessageCircle size={16} />
+  Message Manager
+</button>
     </article>
   );
 }
@@ -2557,6 +2770,231 @@ body {
   .filter-panel .check-pill:nth-of-type(2),
   .filter-panel .clear-btn {
     grid-column: span 1;
+  }
+}
+
+/* ===== USER SIDE CHAT REQUEST UI ===== */
+
+.chat-manager-btn {
+  width: 100%;
+  margin-top: 10px;
+  min-height: 48px;
+  border: none;
+  border-radius: 16px;
+  background: #eff6ff;
+  color: #2563eb;
+  font-weight: 950;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid #bfdbfe;
+}
+
+.chat-manager-btn:hover {
+  background: #2563eb;
+  color: white;
+}
+
+.user-chat-modal {
+  position: relative;
+  width: min(1050px, 100%);
+  max-height: 92vh;
+  overflow-y: auto;
+  border-radius: 26px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 28px 80px rgba(15, 23, 42, .22);
+  padding: 24px;
+}
+
+.user-chat-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: flex-start;
+  padding-right: 52px;
+  margin-bottom: 18px;
+}
+
+.chat-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border-radius: 999px;
+  padding: 7px 12px;
+  background: #eff6ff;
+  color: #2563eb;
+  font-size: .78rem;
+  font-weight: 950;
+  margin-bottom: 10px;
+}
+
+.user-chat-head h2 {
+  margin: 0;
+  font-size: clamp(1.6rem, 4vw, 2.35rem);
+  letter-spacing: -.045em;
+}
+
+.user-chat-head p {
+  margin: 8px 0 0;
+  max-width: 680px;
+  color: #64748b;
+  font-weight: 700;
+}
+
+.user-chat-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) 380px;
+  gap: 16px;
+  align-items: start;
+}
+
+.user-chat-history,
+.user-chat-form {
+  border: 1px solid #e2e8f0;
+  border-radius: 22px;
+  background: #f8fafc;
+  padding: 16px;
+}
+
+.user-chat-history h3,
+.user-chat-form h3 {
+  margin: 0 0 14px;
+}
+
+.user-chat-list {
+  display: grid;
+  gap: 14px;
+  max-height: 520px;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+.user-chat-list::-webkit-scrollbar {
+  width: 7px;
+}
+
+.user-chat-list::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 999px;
+}
+
+.user-chat-item {
+  display: grid;
+  gap: 10px;
+}
+
+.user-message-bubble,
+.manager-message-bubble {
+  border-radius: 18px;
+  padding: 12px 14px;
+}
+
+.user-message-bubble {
+  background: #eff6ff;
+  color: #1e3a8a;
+  margin-right: 42px;
+}
+
+.manager-message-bubble {
+  background: #ecfdf5;
+  color: #065f46;
+  margin-left: 42px;
+}
+
+.user-message-bubble span,
+.manager-message-bubble span {
+  display: block;
+  font-size: .72rem;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  font-weight: 950;
+  margin-bottom: 5px;
+}
+
+.user-message-bubble p,
+.manager-message-bubble p {
+  margin: 0;
+  line-height: 1.55;
+}
+
+.user-message-bubble small,
+.manager-message-bubble small {
+  display: block;
+  margin-top: 7px;
+  color: #64748b;
+  font-weight: 800;
+}
+
+.chat-empty {
+  min-height: 260px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 8px;
+  text-align: center;
+  color: #64748b;
+}
+
+.chat-empty svg {
+  color: #2563eb;
+}
+
+.chat-empty strong {
+  color: #0f172a;
+}
+
+.user-chat-form {
+  display: grid;
+  gap: 11px;
+  background: #fff;
+}
+
+.user-chat-form input,
+.user-chat-form select,
+.user-chat-form textarea {
+  width: 100%;
+  border: 1px solid #dbe3ef;
+  border-radius: 15px;
+  padding: 12px;
+  font: inherit;
+  font-weight: 800;
+  outline: none;
+}
+
+.user-chat-form textarea {
+  min-height: 140px;
+  resize: vertical;
+}
+
+.user-chat-form input:focus,
+.user-chat-form select:focus,
+.user-chat-form textarea:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, .12);
+}
+
+@media (max-width: 900px) {
+  .user-chat-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .user-chat-head {
+    flex-direction: column;
+  }
+
+  .user-chat-head .call-main {
+    width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .user-message-bubble,
+  .manager-message-bubble {
+    margin-left: 0;
+    margin-right: 0;
   }
 }
 

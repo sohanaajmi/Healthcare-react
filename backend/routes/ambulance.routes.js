@@ -1006,11 +1006,23 @@ router.get("/services/:id", async (req, res) => {
 
   const [messages] = await pool.query(
     `
-    SELECT id, sender_name, message_type, message, status, created_at
-    FROM ambulance_messages
-    WHERE ambulance_id = ?
-    ORDER BY created_at DESC
-    LIMIT 10
+    SELECT
+    id,
+    sender_name,
+    sender_phone,
+    sender_email,
+    message_type,
+    message,
+    user_latitude,
+    user_longitude,
+    status,
+    manager_reply,
+    replied_at,
+    created_at
+  FROM ambulance_messages
+  WHERE ambulance_id = ?
+  ORDER BY created_at DESC
+  LIMIT 20
     `,
     [req.params.id]
   );
