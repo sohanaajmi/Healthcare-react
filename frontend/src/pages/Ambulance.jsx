@@ -1124,135 +1124,6 @@ async function submitUserLocation(event) {
                   placeholder="Write your message..."
                   required
                 />
-                {chatTarget && (
-  <div className="modal-overlay">
-    <div className="user-chat-modal">
-      <button className="modal-close" onClick={() => setChatTarget(null)}>
-        <X size={20} />
-      </button>
-
-      <div className="user-chat-head">
-        <div>
-          <span className="chat-kicker">
-            <MessageCircle size={16} />
-            Chat Request
-          </span>
-          <h2>{chatTarget.service_name}</h2>
-          <p>
-            Send message, pickup note, pricing question, or availability request
-            to the ambulance manager.
-          </p>
-        </div>
-
-        <a className="call-main" href={`tel:${telNumber(chatTarget.phone_primary)}`}>
-          <Phone size={18} />
-          Call
-        </a>
-      </div>
-
-      <div className="user-chat-layout">
-        <div className="user-chat-history">
-          <h3>Conversation</h3>
-
-          {chatDetails?.messages?.length ? (
-            <div className="user-chat-list">
-              {chatDetails.messages.map((message) => (
-                <article className="user-chat-item" key={message.id}>
-                  <div className="user-message-bubble">
-                    <span>You / User</span>
-                    <p>{message.message}</p>
-                    <small>{formatDate(message.created_at)} · {message.status}</small>
-                  </div>
-
-                  {message.manager_reply && (
-                    <div className="manager-message-bubble">
-                      <span>Ambulance Manager</span>
-                      <p>{message.manager_reply}</p>
-                      <small>{formatDate(message.replied_at)}</small>
-                    </div>
-                  )}
-                </article>
-              ))}
-            </div>
-          ) : (
-            <div className="chat-empty">
-              <MessageCircle size={34} />
-              <strong>No messages yet</strong>
-              <span>Send your first request to the ambulance manager.</span>
-            </div>
-          )}
-        </div>
-
-        <form className="user-chat-form" onSubmit={submitChatMessage}>
-          <h3>Send Message</h3>
-
-          <div className="form-row">
-            <input
-              name="sender_name"
-              value={chatForm.sender_name}
-              onChange={updateChatForm}
-              placeholder="Your name *"
-              required
-            />
-
-            <input
-              name="sender_phone"
-              value={chatForm.sender_phone}
-              onChange={updateChatForm}
-              placeholder="Your phone *"
-              required
-            />
-          </div>
-
-          <input
-            name="sender_email"
-            value={chatForm.sender_email}
-            onChange={updateChatForm}
-            placeholder="Your email"
-          />
-
-          <select
-            name="message_type"
-            value={chatForm.message_type}
-            onChange={updateChatForm}
-          >
-            <option value="question">General Question</option>
-            <option value="location_update">Pickup Location</option>
-            <option value="pricing">Pricing</option>
-            <option value="availability">Availability</option>
-            <option value="other">Other</option>
-          </select>
-
-          <textarea
-            name="message"
-            value={chatForm.message}
-            onChange={updateChatForm}
-            placeholder="Write your message/request..."
-            required
-          />
-
-          <button className="submit-btn green" disabled={submitting}>
-            <MessageCircle size={16} />
-            Send Message Request
-          </button>
-
-          <button
-            type="button"
-            className="details-btn"
-            onClick={() => {
-              setChatTarget(null);
-              openDetails(chatTarget);
-            }}
-          >
-            <MapPin size={16} />
-            Share Pickup Location Instead
-          </button>
-        </form>
-      </div>
-    </div>
-  </div>
-)}
-
                 <button className="submit-btn green" disabled={submitting}>
                   <MessageCircle size={16} />
                   Send Message
@@ -1262,9 +1133,147 @@ async function submitUserLocation(event) {
           </div>
         </div>
       )}
+
+            {chatTarget && (
+        <div className="modal-overlay">
+          <div className="user-chat-modal">
+            <button className="modal-close" onClick={() => setChatTarget(null)}>
+              <X size={20} />
+            </button>
+
+            <div className="user-chat-head">
+              <div>
+                <span className="chat-kicker">
+                  <MessageCircle size={16} />
+                  Chat Request
+                </span>
+
+                <h2>{chatTarget.service_name}</h2>
+
+                <p>
+                  Send message, pickup note, pricing question, or availability
+                  request to the ambulance manager.
+                </p>
+              </div>
+
+              <a
+                className="call-main"
+                href={`tel:${telNumber(chatTarget.phone_primary)}`}
+              >
+                <Phone size={18} />
+                Call
+              </a>
+            </div>
+
+            <div className="user-chat-layout">
+              <div className="user-chat-history">
+                <h3>Conversation</h3>
+
+                {chatDetails?.messages?.length ? (
+                  <div className="user-chat-list">
+                    {chatDetails.messages.map((message) => (
+                      <article className="user-chat-item" key={message.id}>
+                        <div className="user-message-bubble">
+                          <span>User Message</span>
+                          <p>{message.message}</p>
+                          <small>
+                            {formatDate(message.created_at)} · {message.status}
+                          </small>
+                        </div>
+
+                        {message.manager_reply && (
+                          <div className="manager-message-bubble">
+                            <span>Ambulance Manager</span>
+                            <p>{message.manager_reply}</p>
+                            <small>{formatDate(message.replied_at)}</small>
+                          </div>
+                        )}
+                      </article>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="chat-empty">
+                    <MessageCircle size={34} />
+                    <strong>No messages yet</strong>
+                    <span>Send your first request to the ambulance manager.</span>
+                  </div>
+                )}
+              </div>
+
+              <form className="user-chat-form" onSubmit={submitChatMessage}>
+                <h3>Send Message</h3>
+
+                <div className="form-row">
+                  <input
+                    name="sender_name"
+                    value={chatForm.sender_name}
+                    onChange={updateChatForm}
+                    placeholder="Your name *"
+                    required
+                  />
+
+                  <input
+                    name="sender_phone"
+                    value={chatForm.sender_phone}
+                    onChange={updateChatForm}
+                    placeholder="Your phone *"
+                    required
+                  />
+                </div>
+
+                <input
+                  name="sender_email"
+                  value={chatForm.sender_email}
+                  onChange={updateChatForm}
+                  placeholder="Your email"
+                />
+
+                <select
+                  name="message_type"
+                  value={chatForm.message_type}
+                  onChange={updateChatForm}
+                >
+                  <option value="question">General Question</option>
+                  <option value="location_update">Pickup Location</option>
+                  <option value="pricing">Pricing</option>
+                  <option value="availability">Availability</option>
+                  <option value="other">Other</option>
+                </select>
+
+                <textarea
+                  name="message"
+                  value={chatForm.message}
+                  onChange={updateChatForm}
+                  placeholder="Write your message/request..."
+                  required
+                />
+
+                <button className="submit-btn green" disabled={submitting}>
+                  <MessageCircle size={16} />
+                  Send Message Request
+                </button>
+
+                <button
+                  type="button"
+                  className="details-btn"
+                  onClick={() => {
+                    const currentTarget = chatTarget;
+                    setChatTarget(null);
+                    openDetails(currentTarget);
+                  }}
+                >
+                  <MapPin size={16} />
+                  Share Pickup Location Instead
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
+
 
 function Stat({ icon, label, value }) {
   return (
