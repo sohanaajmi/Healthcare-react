@@ -12,6 +12,7 @@ import SignIn from "./pages/SignIn.jsx";
 import SignUp from "./pages/SignUp.jsx";
 import PharmacyAdminDashboard from "./pages/PharmacyAdminDashboard.jsx";
 import AmbulanceManagerDashboard from "./pages/AmbulanceManagerDashboard.jsx";
+import DoctorTelemedicineDashboard from "./pages/DoctorTelemedicineDashboard.jsx";
 
 export default function App() {
   return (
@@ -29,6 +30,7 @@ export default function App() {
         <Route path="/pharmacies" element={<Pharmacies />} />
         <Route path="/ambulance" element={<Ambulance />} />
         <Route path="/telemedicine" element={<Telemedicine />} />
+        <Route path="/telemedicine-doctor" element={<DoctorTelemedicineDashboard />} />
         <Route path="/drug-interactions" element={<DrugInteractions />} />
         <Route path="/appointments" element={<Appointments />} />
         <Route path="/signin" element={<SignIn />} />

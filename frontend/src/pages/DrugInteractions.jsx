@@ -757,17 +757,28 @@ export default function DrugInteractions() {
                 value={prescriptionForm.prescription_date}
                 onChange={updatePrescriptionForm}
               />
-              <label className="upload-box">
-                <UploadCloud size={22} />
-                <strong>Upload prescription file</strong>
-                <span>PDF, JPG, PNG, WEBP up to 5MB</span>
-                <input
-                  type="file"
-                  name="prescription_file"
-                  accept=".pdf,.jpg,.jpeg,.png,.webp"
-                  onChange={updatePrescriptionForm}
-                />
-              </label>
+              <label className={`upload-box ${prescriptionForm.prescription_file ? "has-file" : ""}`}>
+  <UploadCloud size={22} />
+
+  <strong>
+    {prescriptionForm.prescription_file
+      ? prescriptionForm.prescription_file.name
+      : "Upload prescription file"}
+  </strong>
+
+  <span>
+    {prescriptionForm.prescription_file
+      ? `${(prescriptionForm.prescription_file.size / 1024 / 1024).toFixed(2)} MB selected`
+      : "PDF, JPG, PNG, WEBP up to 5MB"}
+  </span>
+
+  <input
+    type="file"
+    name="prescription_file"
+    accept=".pdf,.jpg,.jpeg,.png,.webp"
+    onChange={updatePrescriptionForm}
+  />
+</label>
               <textarea
                 name="notes"
                 value={prescriptionForm.notes}
@@ -1622,5 +1633,19 @@ const styles = `
 .drug-notice.error {
   background: #fee2e2;
   color: #991b1b;
+}
+
+.upload-box.has-file {
+  border-color: #2563eb;
+  background: linear-gradient(135deg, #eff6ff, #ecfdf5);
+}
+
+.upload-box.has-file strong {
+  color: #2563eb;
+  word-break: break-word;
+}
+
+.upload-box.has-file span {
+  color: #047857;
 }
 `;

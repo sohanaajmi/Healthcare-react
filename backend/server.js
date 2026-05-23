@@ -11,6 +11,7 @@ import bloodbankRoutes from "./routes/bloodbank.routes.js";
 import pharmacyRoutes from "./routes/pharmacy.routes.js";
 import ambulanceRoutes from "./routes/ambulance.routes.js";
 import drugRoutes from "./routes/drug.routes.js";
+import telemedicineRoutes from "./routes/telemedicine.routes.js";
 
 dotenv.config();
 
@@ -38,6 +39,7 @@ app.use("/api/bloodbank", bloodbankRoutes);
 app.use("/api/pharmacy", pharmacyRoutes);
 app.use("/api/ambulance", ambulanceRoutes);
 app.use("/api/drug-interactions", drugRoutes);
+app.use("/api/telemedicine", telemedicineRoutes);
 
 app.get("/", (req, res) => {
   res.json({
