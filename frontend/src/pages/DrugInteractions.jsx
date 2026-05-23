@@ -18,6 +18,16 @@ import {
 } from "lucide-react";
 import api from "../services/api.js";
 import { useAuth } from "../context/AuthContext.jsx";
+import { useNavigate } from "react-router-dom";
+import { UploadCloud, ShoppingCart, CheckCircle, AlertTriangle } from "lucide-react";
+
+const navigate = useNavigate();
+
+const [prescriptionFile, setPrescriptionFile] = useState(null);
+const [prescriptionText, setPrescriptionText] = useState("");
+const [prescriptionScan, setPrescriptionScan] = useState(null);
+const [prescriptionLoading, setPrescriptionLoading] = useState(false);
+const [notice, setNotice] = useState(null);
 
 const emptyReminder = {
   medicine_name: "",
@@ -76,6 +86,105 @@ function formatDate(value) {
 
 function today() {
   return new Date().toISOString().slice(0, 10);
+}
+
+function mergeProductsIntoCart(products) {
+  let currentCart = [];
+
+  try {
+    currentCart = JSON.parse(localStorage.getItem("healthcare_cart") || "[]");
+  } catch {
+    currentCart = [];
+  }
+
+  const nextCart = [...currentCart];
+
+  products.forEach((product) => {
+    const foundIndex = nextCart.findIndex((item) => Number(item.id) === Number(product.id));
+
+    if (foundIndex >= 0) {
+      nextCart[foundIndex] = {
+        ...nextCart[foundIndex],
+        quantity: Number(nextCart[foundIndex].quantity || 1) + Number(product.quantity || 1),
+      };
+    } else {
+      nextCart.push({
+        ...product,
+        quantity: Number(product.quantity || 1),
+      });
+    }
+  });
+
+  localStorage.setItem("healthcare_cart", JSON.stringify(nextCart));
+  localStorage.setItem(
+    "healthcare_cart_notice",
+    JSON.stringify({
+      type: "success",
+      message: `${products.length} medicine(s) were detected from your prescription and added to cart. Please review before placing order.`,
+    })
+  );
+
+  return nextCart;
+}
+
+async function uploadPrescriptionAndAddToCart(event) {
+  event.preventDefault();
+
+  if (!prescriptionFile) {
+    setNotice({
+      type: "error",
+      message: "Please choose a prescription image or PDF.",
+    });
+    return;
+  }
+
+  setPrescriptionLoading(true);
+  setNotice(null);
+
+  try {
+    const formData = new FormData();
+    formData.append("prescription", prescriptionFile);
+    formData.append("prescription_text", prescriptionText);
+
+    const response = await api.post(
+      "/drug-interactions/prescriptions/scan-cart",
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+
+    const matchedProducts = response.data.data?.matched_products || [];
+
+    setPrescriptionScan(response.data.data);
+
+    if (matchedProducts.length > 0) {
+      mergeProductsIntoCart(matchedProducts);
+
+      setNotice({
+        type: "success",
+        message: response.data.message,
+      });
+
+      setTimeout(() => {
+        navigate("/pharmacies?view=checkout");
+      }, 900);
+    } else {
+      setNotice({
+        type: "error",
+        message: response.data.message,
+      });
+    }
+  } catch (error) {
+    setNotice({
+      type: "error",
+      message: error.response?.data?.message || "Could not scan prescription.",
+    });
+  } finally {
+    setPrescriptionLoading(false);
+  }
 }
 
 export default function DrugInteractions() {
@@ -572,7 +681,78 @@ export default function DrugInteractions() {
               <textarea name="notes" value={prescriptionForm.notes} onChange={updatePrescriptionForm} placeholder="Notes" />
               <button className="primary-btn" disabled={loading}>Save Prescription</button>
             </form>
+            
           )}
+          <form className="prescription-auto-card" onSubmit={uploadPrescriptionAndAddToCart}>
+  <div className="prescription-head">
+    <span>
+      <UploadCloud size={18} />
+      Add Prescription
+    </span>
+
+    <h2>Upload prescription and auto-add medicines to cart</h2>
+    <p>
+      The system will scan your prescription, match available pharmacy products,
+      add detected medicines to your cart, and ask you to review before checkout.
+    </p>
+  </div>
+
+  {notice && (
+    <div className={`drug-notice ${notice.type}`}>
+      {notice.type === "success" ? <CheckCircle size={18} /> : <AlertTriangle size={18} />}
+      {notice.message}
+    </div>
+  )}
+
+  <label className="prescription-upload-box">
+    <UploadCloud size={32} />
+    <strong>{prescriptionFile ? prescriptionFile.name : "Upload prescription"}</strong>
+    <small>JPG, PNG, WEBP, or PDF up to 8MB</small>
+
+    <input
+      type="file"
+      accept="image/*,.pdf"
+      onChange={(event) => setPrescriptionFile(event.target.files?.[0] || null)}
+    />
+  </label>
+
+  <label className="manual-text-box">
+    Prescription text / notes optional
+    <textarea
+      value={prescriptionText}
+      onChange={(event) => setPrescriptionText(event.target.value)}
+      placeholder="Optional: type medicine names if the image is unclear..."
+    />
+  </label>
+
+  <button className="scan-cart-btn" disabled={prescriptionLoading}>
+    <ShoppingCart size={18} />
+    {prescriptionLoading ? "Scanning Prescription..." : "Scan & Add Medicines to Cart"}
+  </button>
+
+  {prescriptionScan && (
+    <div className="scan-result-card">
+      <h3>Detected Medicines</h3>
+
+      {prescriptionScan.matched_products?.length ? (
+        <div className="detected-list">
+          {prescriptionScan.matched_products.map((product) => (
+            <div className="detected-item" key={product.id}>
+              <div>
+                <strong>{product.name}</strong>
+                <span>{product.manufacturer}</span>
+              </div>
+
+              <b>৳{Number(product.price || 0).toFixed(2)}</b>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p>No matching product detected. Please search manually in Pharmacy.</p>
+      )}
+    </div>
+  )}
+</form>
         </Modal>
       )}
 
@@ -1226,5 +1406,162 @@ const styles = `
   .mini-record {
     flex-direction: column;
   }
+}
+
+.prescription-auto-card {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 26px;
+  padding: 22px;
+  box-shadow: 0 18px 44px rgba(15, 23, 42, .08);
+  display: grid;
+  gap: 16px;
+}
+
+.prescription-head span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #eff6ff;
+  color: #2563eb;
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-weight: 950;
+  margin-bottom: 12px;
+}
+
+.prescription-head h2 {
+  margin: 0;
+  font-size: clamp(1.6rem, 4vw, 2.2rem);
+  letter-spacing: -.045em;
+}
+
+.prescription-head p {
+  color: #64748b;
+  font-weight: 700;
+}
+
+.prescription-upload-box {
+  border: 1px dashed #93c5fd;
+  background: linear-gradient(135deg, #eff6ff, #ecfdf5);
+  border-radius: 22px;
+  padding: 26px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  gap: 8px;
+  color: #2563eb;
+  cursor: pointer;
+}
+
+.prescription-upload-box input {
+  display: none;
+}
+
+.prescription-upload-box strong {
+  color: #0f172a;
+}
+
+.prescription-upload-box small {
+  color: #64748b;
+  font-weight: 800;
+}
+
+.manual-text-box {
+  display: grid;
+  gap: 8px;
+  color: #334155;
+  font-weight: 900;
+}
+
+.manual-text-box textarea {
+  min-height: 90px;
+  border: 1px solid #dbe3ef;
+  border-radius: 16px;
+  padding: 12px;
+  font: inherit;
+  font-weight: 700;
+  resize: vertical;
+}
+
+.scan-cart-btn {
+  min-height: 52px;
+  border: none;
+  border-radius: 16px;
+  background: #2563eb;
+  color: white;
+  font-weight: 950;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 12px 24px rgba(37, 99, 235, .22);
+}
+
+.scan-cart-btn:disabled {
+  opacity: .65;
+  cursor: not-allowed;
+}
+
+.scan-result-card {
+  border: 1px solid #dbeafe;
+  background: #f8fafc;
+  border-radius: 20px;
+  padding: 16px;
+}
+
+.scan-result-card h3 {
+  margin: 0 0 12px;
+}
+
+.detected-list {
+  display: grid;
+  gap: 10px;
+}
+
+.detected-item {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 12px;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+}
+
+.detected-item strong,
+.detected-item span {
+  display: block;
+}
+
+.detected-item span {
+  color: #64748b;
+  font-size: .85rem;
+  font-weight: 800;
+}
+
+.detected-item b {
+  color: #047857;
+}
+
+.drug-notice {
+  border-radius: 16px;
+  padding: 13px 16px;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.drug-notice.success {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.drug-notice.error {
+  background: #fee2e2;
+  color: #991b1b;
 }
 `;

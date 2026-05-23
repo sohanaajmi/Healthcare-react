@@ -3,8 +3,13 @@ import jwt from "jsonwebtoken";
 import fs from "fs";
 import path from "path";
 import multer from "multer";
+import { createWorker } from "tesseract.js";
 import { fileURLToPath } from "url";
+import { createRequire } from "module";
 import { pool } from "../db.js";
+
+const require = createRequire(import.meta.url);
+const pdfParse = require("pdf-parse/lib/pdf-parse.js");
 
 const router = express.Router();
 
@@ -65,6 +70,88 @@ function requireUser(req, res, next) {
 
     next();
   });
+}
+
+
+function normalizePrescriptionText(value) {
+  return String(value || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function prescriptionMedicineBaseName(name) {
+  return normalizePrescriptionText(name)
+    .replace(/\b\d+(\.\d+)?\s*(mg|mcg|g|ml|iu|unit|units)\b/g, "")
+    .replace(/\b(tablet|tab|capsule|cap|syrup|injection|inj|drop|drops)\b/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function cartMoney(value) {
+  return Number(Number(value || 0).toFixed(2));
+}
+
+function normalizeCartProduct(product) {
+  return {
+    ...product,
+    id: Number(product.id),
+    mrp: cartMoney(product.mrp),
+    price: cartMoney(product.price),
+    discount: Number(product.discount || 0),
+    is_special_offer: Number(product.is_special_offer || 0) === 1,
+    in_stock: Number(product.in_stock ?? 1) === 1,
+  };
+}
+
+async function extractPrescriptionText(file) {
+  if (!file) return "";
+
+  if (file.mimetype === "application/pdf") {
+    const buffer = fs.readFileSync(file.path);
+    const parsed = await pdfParse(buffer);
+    return parsed.text || "";
+  }
+
+  const worker = await createWorker("eng");
+
+  try {
+    const result = await worker.recognize(file.path);
+    return result?.data?.text || "";
+  } finally {
+    await worker.terminate();
+  }
+}
+
+function detectPrescriptionProducts(rawText, products) {
+  const text = normalizePrescriptionText(rawText);
+
+  if (!text) return [];
+
+  const found = [];
+  const seen = new Set();
+
+  for (const product of products) {
+    const fullName = normalizePrescriptionText(product.name);
+    const baseName = prescriptionMedicineBaseName(product.name);
+
+    const fullMatch = fullName && text.includes(fullName);
+    const baseMatch = baseName.length >= 4 && text.includes(baseName);
+
+    if ((fullMatch || baseMatch) && !seen.has(Number(product.id))) {
+      seen.add(Number(product.id));
+      found.push({
+        ...normalizeCartProduct(product),
+        quantity: 1,
+        detection_reason: fullMatch
+          ? "Full medicine name matched"
+          : "Medicine base name matched",
+      });
+    }
+  }
+
+  return found;
 }
 
 const seedMedicines = {
@@ -802,6 +889,60 @@ router.delete("/prescriptions/:id", requireUser, async (req, res) => {
   await pool.query("DELETE FROM user_prescriptions WHERE id = ? AND user_id = ?", [req.params.id, req.user.id]);
 
   res.json({ success: true, message: "Prescription deleted." });
+});
+
+
+router.post("/prescriptions/scan-cart", optionalAuth, upload.single("prescription"), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: "Please upload a prescription file.",
+      });
+    }
+
+    const manualText = clean(req.body.prescription_text);
+    let extractedText = "";
+
+    try {
+      extractedText = await extractPrescriptionText(req.file);
+    } catch (ocrError) {
+      console.error("Prescription OCR error:", ocrError);
+    }
+
+    const combinedText = `${manualText}\n${extractedText}\n${req.file.originalname}`;
+
+    const [products] = await pool.query(`
+      SELECT *
+      FROM products
+      WHERE in_stock = 1
+      ORDER BY name ASC
+    `);
+
+    const matchedProducts = detectPrescriptionProducts(combinedText, products);
+
+    return res.json({
+      success: true,
+      message:
+        matchedProducts.length > 0
+          ? `${matchedProducts.length} medicine(s) detected from prescription. Please review your cart before checkout.`
+          : "Prescription uploaded, but no matching pharmacy product was detected. Please search manually.",
+      data: {
+        file_url: `/uploads/prescriptions/${req.file.filename}`,
+        original_file_name: req.file.originalname,
+        extracted_text: extractedText,
+        matched_products: matchedProducts,
+        matched_count: matchedProducts.length,
+      },
+    });
+  } catch (error) {
+    console.error("Prescription scan-cart error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Could not scan prescription.",
+    });
+  }
 });
 
 router.use((error, _req, res, _next) => {

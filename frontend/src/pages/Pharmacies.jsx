@@ -18,6 +18,8 @@ import {
 import api from "../services/api.js";
 import { useAuth } from "../context/AuthContext.jsx";
 import PharmacyAdminDashboard from "./PharmacyAdminDashboard.jsx";
+import { useLocation } from "react-router-dom";
+
 
 const initialFilters = {
   search: "",
@@ -77,6 +79,7 @@ function statusIcon(status) {
 
 export default function Pharmacies() {
   const { user } = useAuth();
+  const location = useLocation();
 
   const [products, setProducts] = useState([]);
   const [meta, setMeta] = useState({
@@ -138,6 +141,37 @@ export default function Pharmacies() {
     const timer = setTimeout(loadProducts, 250);
     return () => clearTimeout(timer);
   }, [filters.search, filters.category, filters.manufacturer, filters.special]);
+
+  useEffect(() => {
+  const query = new URLSearchParams(location.search);
+  const shouldOpenCheckout = query.get("view") === "checkout";
+
+  const cartNotice = localStorage.getItem("healthcare_cart_notice");
+
+  if (cartNotice) {
+    try {
+      const parsed = JSON.parse(cartNotice);
+      setNotice(parsed);
+    } catch {
+      setNotice({
+        type: "success",
+        message: "Prescription medicines were added to cart. Please review before checkout.",
+      });
+    }
+
+    localStorage.removeItem("healthcare_cart_notice");
+  }
+
+  if (shouldOpenCheckout) {
+    try {
+      setCart(JSON.parse(localStorage.getItem("healthcare_cart") || "[]"));
+    } catch {
+      setCart([]);
+    }
+
+    setView("checkout");
+  }
+}, [location.search]);
 
   useEffect(() => {
     if (user) {
