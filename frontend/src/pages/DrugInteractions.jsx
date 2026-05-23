@@ -18,16 +18,6 @@ import {
 } from "lucide-react";
 import api from "../services/api.js";
 import { useAuth } from "../context/AuthContext.jsx";
-import { useNavigate } from "react-router-dom";
-import { UploadCloud, ShoppingCart, CheckCircle, AlertTriangle } from "lucide-react";
-
-const navigate = useNavigate();
-
-const [prescriptionFile, setPrescriptionFile] = useState(null);
-const [prescriptionText, setPrescriptionText] = useState("");
-const [prescriptionScan, setPrescriptionScan] = useState(null);
-const [prescriptionLoading, setPrescriptionLoading] = useState(false);
-const [notice, setNotice] = useState(null);
 
 const emptyReminder = {
   medicine_name: "",
@@ -73,6 +63,7 @@ function fileUrl(path) {
 
 function formatDate(value) {
   if (!value) return "N/A";
+
   try {
     return new Date(value).toLocaleDateString(undefined, {
       year: "numeric",
@@ -88,109 +79,14 @@ function today() {
   return new Date().toISOString().slice(0, 10);
 }
 
-function mergeProductsIntoCart(products) {
-  let currentCart = [];
-
-  try {
-    currentCart = JSON.parse(localStorage.getItem("healthcare_cart") || "[]");
-  } catch {
-    currentCart = [];
-  }
-
-  const nextCart = [...currentCart];
-
-  products.forEach((product) => {
-    const foundIndex = nextCart.findIndex((item) => Number(item.id) === Number(product.id));
-
-    if (foundIndex >= 0) {
-      nextCart[foundIndex] = {
-        ...nextCart[foundIndex],
-        quantity: Number(nextCart[foundIndex].quantity || 1) + Number(product.quantity || 1),
-      };
-    } else {
-      nextCart.push({
-        ...product,
-        quantity: Number(product.quantity || 1),
-      });
-    }
-  });
-
-  localStorage.setItem("healthcare_cart", JSON.stringify(nextCart));
-  localStorage.setItem(
-    "healthcare_cart_notice",
-    JSON.stringify({
-      type: "success",
-      message: `${products.length} medicine(s) were detected from your prescription and added to cart. Please review before placing order.`,
-    })
-  );
-
-  return nextCart;
-}
-
-async function uploadPrescriptionAndAddToCart(event) {
-  event.preventDefault();
-
-  if (!prescriptionFile) {
-    setNotice({
-      type: "error",
-      message: "Please choose a prescription image or PDF.",
-    });
-    return;
-  }
-
-  setPrescriptionLoading(true);
-  setNotice(null);
-
-  try {
-    const formData = new FormData();
-    formData.append("prescription", prescriptionFile);
-    formData.append("prescription_text", prescriptionText);
-
-    const response = await api.post(
-      "/drug-interactions/prescriptions/scan-cart",
-      formData,
-      {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      }
-    );
-
-    const matchedProducts = response.data.data?.matched_products || [];
-
-    setPrescriptionScan(response.data.data);
-
-    if (matchedProducts.length > 0) {
-      mergeProductsIntoCart(matchedProducts);
-
-      setNotice({
-        type: "success",
-        message: response.data.message,
-      });
-
-      setTimeout(() => {
-        navigate("/pharmacies?view=checkout");
-      }, 900);
-    } else {
-      setNotice({
-        type: "error",
-        message: response.data.message,
-      });
-    }
-  } catch (error) {
-    setNotice({
-      type: "error",
-      message: error.response?.data?.message || "Could not scan prescription.",
-    });
-  } finally {
-    setPrescriptionLoading(false);
-  }
-}
 
 export default function DrugInteractions() {
   const { user } = useAuth();
-
-  const [meta, setMeta] = useState({ total_medicines: 0, known_interactions: 0, severity_counts: [] });
+  const [meta, setMeta] = useState({
+    total_medicines: 0,
+    known_interactions: 0,
+    severity_counts: [],
+  });
   const [medicines, setMedicines] = useState([]);
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState(["", ""]);
@@ -226,6 +122,7 @@ export default function DrugInteractions() {
 
   useEffect(() => {
     loadInitialData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -235,6 +132,7 @@ export default function DrugInteractions() {
       setReminders([]);
       setPrescriptions([]);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   async function loadInitialData() {
@@ -251,7 +149,9 @@ export default function DrugInteractions() {
     } catch (error) {
       setNotice({
         type: "error",
-        message: error.response?.data?.message || "Could not load drug interaction database.",
+        message:
+          error.response?.data?.message ||
+          "Could not load drug interaction database.",
       });
     } finally {
       setLoading(false);
@@ -275,7 +175,9 @@ export default function DrugInteractions() {
   }
 
   function updateSelected(index, value) {
-    setSelected((current) => current.map((item, itemIndex) => (itemIndex === index ? value : item)));
+    setSelected((current) =>
+      current.map((item, itemIndex) => (itemIndex === index ? value : item))
+    );
   }
 
   function addMedicineRow() {
@@ -285,7 +187,9 @@ export default function DrugInteractions() {
   function removeMedicineRow(index) {
     setSelected((current) => {
       if (current.length <= 2) {
-        return current.map((item, itemIndex) => (itemIndex === index ? "" : item));
+        return current.map((item, itemIndex) =>
+          itemIndex === index ? "" : item
+        );
       }
 
       return current.filter((_item, itemIndex) => itemIndex !== index);
@@ -298,7 +202,10 @@ export default function DrugInteractions() {
     const medicinesToCheck = selected.filter(Boolean);
 
     if (medicinesToCheck.length < 2) {
-      setNotice({ type: "error", message: "Select at least two medicines to check." });
+      setNotice({
+        type: "error",
+        message: "Select at least two medicines to check.",
+      });
       return;
     }
 
@@ -325,10 +232,15 @@ export default function DrugInteractions() {
   function quickAddMedicine(name) {
     setSelected((current) => {
       if (current.includes(name)) return current;
+
       const emptyIndex = current.findIndex((item) => !item);
+
       if (emptyIndex >= 0) {
-        return current.map((item, index) => (index === emptyIndex ? name : item));
+        return current.map((item, index) =>
+          index === emptyIndex ? name : item
+        );
       }
+
       return [...current, name];
     });
   }
@@ -342,20 +254,32 @@ export default function DrugInteractions() {
     event.preventDefault();
 
     if (!user) {
-      setNotice({ type: "error", message: "Please sign in first to save reminders." });
+      setNotice({
+        type: "error",
+        message: "Please sign in first to save reminders.",
+      });
       return;
     }
 
     setLoading(true);
 
     try {
-      const response = await api.post("/drug-interactions/reminders", reminderForm);
-      setNotice({ type: "success", message: response.data.message || "Medicine reminder saved." });
+      const response = await api.post(
+        "/drug-interactions/reminders",
+        reminderForm
+      );
+      setNotice({
+        type: "success",
+        message: response.data.message || "Medicine reminder saved.",
+      });
       setReminderForm({ ...emptyReminder, start_date: today() });
       setShowReminder(false);
       await loadUserLists();
     } catch (error) {
-      setNotice({ type: "error", message: error.response?.data?.message || "Could not save reminder." });
+      setNotice({
+        type: "error",
+        message: error.response?.data?.message || "Could not save reminder.",
+      });
     } finally {
       setLoading(false);
     }
@@ -366,7 +290,10 @@ export default function DrugInteractions() {
       await api.patch(`/drug-interactions/reminders/${id}/toggle`);
       await loadUserLists();
     } catch (error) {
-      setNotice({ type: "error", message: error.response?.data?.message || "Could not update reminder." });
+      setNotice({
+        type: "error",
+        message: error.response?.data?.message || "Could not update reminder.",
+      });
     }
   }
 
@@ -377,7 +304,10 @@ export default function DrugInteractions() {
       await api.delete(`/drug-interactions/reminders/${id}`);
       await loadUserLists();
     } catch (error) {
-      setNotice({ type: "error", message: error.response?.data?.message || "Could not delete reminder." });
+      setNotice({
+        type: "error",
+        message: error.response?.data?.message || "Could not delete reminder.",
+      });
     }
   }
 
@@ -393,7 +323,10 @@ export default function DrugInteractions() {
     event.preventDefault();
 
     if (!user) {
-      setNotice({ type: "error", message: "Please sign in first to add prescriptions." });
+      setNotice({
+        type: "error",
+        message: "Please sign in first to add prescriptions.",
+      });
       return;
     }
 
@@ -405,19 +338,31 @@ export default function DrugInteractions() {
     setLoading(true);
 
     try {
-      const response = await api.post("/drug-interactions/prescriptions", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
+      const response = await api.post(
+        "/drug-interactions/prescriptions",
+        formData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        }
+      );
+
+      setNotice({
+        type: "success",
+        message: response.data.message || "Prescription added.",
       });
-      setNotice({ type: "success", message: response.data.message || "Prescription added." });
       setPrescriptionForm(emptyPrescription);
       setShowPrescription(false);
       await loadUserLists();
     } catch (error) {
-      setNotice({ type: "error", message: error.response?.data?.message || "Could not add prescription." });
+      setNotice({
+        type: "error",
+        message: error.response?.data?.message || "Could not add prescription.",
+      });
     } finally {
       setLoading(false);
     }
   }
+
 
   async function deletePrescription(id) {
     if (!window.confirm("Delete this prescription?")) return;
@@ -426,7 +371,11 @@ export default function DrugInteractions() {
       await api.delete(`/drug-interactions/prescriptions/${id}`);
       await loadUserLists();
     } catch (error) {
-      setNotice({ type: "error", message: error.response?.data?.message || "Could not delete prescription." });
+      setNotice({
+        type: "error",
+        message:
+          error.response?.data?.message || "Could not delete prescription.",
+      });
     }
   }
 
@@ -462,16 +411,32 @@ export default function DrugInteractions() {
 
         {notice && (
           <div className={`di-notice ${notice.type}`}>
-            {notice.type === "success" ? <CheckCircle size={18} /> : <AlertTriangle size={18} />}
+            {notice.type === "success" ? (
+              <CheckCircle size={18} />
+            ) : (
+              <AlertTriangle size={18} />
+            )}
             {notice.message}
           </div>
         )}
 
         <div className="di-stats">
-          <Stat icon={<Stethoscope />} label="Medicines" value={meta.total_medicines || 0} />
-          <Stat icon={<ShieldAlert />} label="Known Interactions" value={meta.known_interactions || 0} />
+          <Stat
+            icon={<Stethoscope />}
+            label="Medicines"
+            value={meta.total_medicines || 0}
+          />
+          <Stat
+            icon={<ShieldAlert />}
+            label="Known Interactions"
+            value={meta.known_interactions || 0}
+          />
           <Stat icon={<Bell />} label="Your Reminders" value={reminders.length} />
-          <Stat icon={<FileText />} label="Prescriptions" value={prescriptions.length} />
+          <Stat
+            icon={<FileText />}
+            label="Prescriptions"
+            value={prescriptions.length}
+          />
         </div>
 
         <div className="di-grid">
@@ -482,7 +447,11 @@ export default function DrugInteractions() {
                   <h2>Search Medicine Database</h2>
                   <p>Find medicines by name, category, or common use.</p>
                 </div>
-                <button type="button" className="ghost-btn" onClick={loadInitialData}>
+                <button
+                  type="button"
+                  className="ghost-btn"
+                  onClick={loadInitialData}
+                >
                   <RefreshCcw size={16} />
                   Refresh
                 </button>
@@ -499,13 +468,19 @@ export default function DrugInteractions() {
 
               <div className="medicine-results">
                 {searchedMedicines.map((medicine) => (
-                  <article className="medicine-chip-card" key={medicine.medicine_name}>
+                  <article
+                    className="medicine-chip-card"
+                    key={medicine.medicine_name}
+                  >
                     <div>
                       <h3>{medicine.medicine_name}</h3>
                       <p>{medicine.category}</p>
                       <small>{medicine.common_use}</small>
                     </div>
-                    <button type="button" onClick={() => quickAddMedicine(medicine.medicine_name)}>
+                    <button
+                      type="button"
+                      onClick={() => quickAddMedicine(medicine.medicine_name)}
+                    >
                       <Plus size={16} />
                       Add
                     </button>
@@ -518,7 +493,10 @@ export default function DrugInteractions() {
               <div className="card-head">
                 <div>
                   <h2>Interaction Checker</h2>
-                  <p>Select two or more medicines to check pairwise interaction risk.</p>
+                  <p>
+                    Select two or more medicines to check pairwise interaction
+                    risk.
+                  </p>
                 </div>
               </div>
 
@@ -526,10 +504,17 @@ export default function DrugInteractions() {
                 {selected.map((value, index) => (
                   <div className="selected-row" key={`${index}-${value}`}>
                     <span>{index + 1}</span>
-                    <select value={value} onChange={(event) => updateSelected(index, event.target.value)}>
+                    <select
+                      value={value}
+                      onChange={(event) =>
+                        updateSelected(index, event.target.value)
+                      }
+                    >
                       <option value="">Select medication...</option>
                       {medicineNames.map((name) => (
-                        <option key={name} value={name}>{name}</option>
+                        <option key={name} value={name}>
+                          {name}
+                        </option>
                       ))}
                     </select>
                     <button type="button" onClick={() => removeMedicineRow(index)}>
@@ -540,7 +525,11 @@ export default function DrugInteractions() {
               </div>
 
               <div className="checker-actions">
-                <button type="button" className="ghost-btn" onClick={addMedicineRow}>
+                <button
+                  type="button"
+                  className="ghost-btn"
+                  onClick={addMedicineRow}
+                >
                   <Plus size={16} />
                   Add Medicine
                 </button>
@@ -553,7 +542,10 @@ export default function DrugInteractions() {
 
             <div className="severity-grid">
               {Object.values(severityMeta).map((item) => (
-                <article className={`severity-card ${item.className}`} key={item.title}>
+                <article
+                  className={`severity-card ${item.className}`}
+                  key={item.title}
+                >
                   <h3>{item.title}</h3>
                   <p>{item.text}</p>
                 </article>
@@ -568,8 +560,8 @@ export default function DrugInteractions() {
                 Important Notice
               </h2>
               <p>
-                This tool uses your local educational database. It does not replace
-                medical advice, diagnosis, or treatment.
+                This tool uses your local educational database. It does not
+                replace medical advice, diagnosis, or treatment.
               </p>
               <ul>
                 <li>Ask a doctor before combining medicines.</li>
@@ -581,70 +573,126 @@ export default function DrugInteractions() {
             <div className="di-card list-card">
               <h2>Your Reminders</h2>
               {user ? (
-                reminders.length ? reminders.slice(0, 5).map((item) => (
-                  <article className="mini-record" key={item.id}>
-                    <div>
-                      <strong>{item.medicine_name}</strong>
-                      <span>{item.dosage || "No dosage"} · {item.reminder_time}</span>
-                      <small>{item.frequency} · {formatDate(item.start_date)}</small>
-                    </div>
-                    <div className="mini-actions">
-                      <button type="button" onClick={() => toggleReminder(item.id)}>
-                        {item.is_active ? "Active" : "Off"}
-                      </button>
-                      <button type="button" className="danger" onClick={() => deleteReminder(item.id)}>
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
-                  </article>
-                )) : <p className="empty-side">No reminders yet.</p>
-              ) : <p className="empty-side">Sign in to save reminders.</p>}
+                reminders.length ? (
+                  reminders.slice(0, 5).map((item) => (
+                    <article className="mini-record" key={item.id}>
+                      <div>
+                        <strong>{item.medicine_name}</strong>
+                        <span>
+                          {item.dosage || "No dosage"} · {item.reminder_time}
+                        </span>
+                        <small>
+                          {item.frequency} · {formatDate(item.start_date)}
+                        </small>
+                      </div>
+                      <div className="mini-actions">
+                        <button type="button" onClick={() => toggleReminder(item.id)}>
+                          {item.is_active ? "Active" : "Off"}
+                        </button>
+                        <button
+                          type="button"
+                          className="danger"
+                          onClick={() => deleteReminder(item.id)}
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </article>
+                  ))
+                ) : (
+                  <p className="empty-side">No reminders yet.</p>
+                )
+              ) : (
+                <p className="empty-side">Sign in to save reminders.</p>
+              )}
             </div>
 
             <div className="di-card list-card">
               <h2>Prescriptions</h2>
               {user ? (
-                prescriptions.length ? prescriptions.slice(0, 5).map((item) => (
-                  <article className="mini-record" key={item.id}>
-                    <div>
-                      <strong>{item.prescription_title}</strong>
-                      <span>{item.doctor_name || "Doctor not added"}</span>
-                      <small>{formatDate(item.prescription_date || item.created_at)}</small>
-                    </div>
-                    <div className="mini-actions">
-                      {item.file_path && (
-                        <a href={fileUrl(item.file_path)} target="_blank" rel="noreferrer">Open</a>
-                      )}
-                      <button type="button" className="danger" onClick={() => deletePrescription(item.id)}>
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
-                  </article>
-                )) : <p className="empty-side">No prescriptions yet.</p>
-              ) : <p className="empty-side">Sign in to upload prescriptions.</p>}
+                prescriptions.length ? (
+                  prescriptions.slice(0, 5).map((item) => (
+                    <article className="mini-record" key={item.id}>
+                      <div>
+                        <strong>{item.prescription_title}</strong>
+                        <span>{item.doctor_name || "Doctor not added"}</span>
+                        <small>
+                          {formatDate(item.prescription_date || item.created_at)}
+                        </small>
+                      </div>
+                      <div className="mini-actions">
+                        {item.file_path && (
+                          <a
+                            href={fileUrl(item.file_path)}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            Open
+                          </a>
+                        )}
+                        <button
+                          type="button"
+                          className="danger"
+                          onClick={() => deletePrescription(item.id)}
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </article>
+                  ))
+                ) : (
+                  <p className="empty-side">No prescriptions yet.</p>
+                )
+              ) : (
+                <p className="empty-side">Sign in to upload prescriptions.</p>
+              )}
             </div>
           </aside>
         </div>
       </div>
 
       {showResults && (
-        <ResultModal
-          results={results}
-          onClose={() => setShowResults(false)}
-        />
+        <ResultModal results={results} onClose={() => setShowResults(false)} />
       )}
 
       {showReminder && (
-        <Modal title="Set Medicine Reminder" icon={<Bell size={18} />} onClose={() => setShowReminder(false)}>
+        <Modal
+          title="Set Medicine Reminder"
+          icon={<Bell size={18} />}
+          onClose={() => setShowReminder(false)}
+        >
           {!user ? (
             <div className="login-needed">Please sign in first to save reminders.</div>
           ) : (
             <form className="modal-form" onSubmit={saveReminder}>
-              <input name="medicine_name" value={reminderForm.medicine_name} onChange={updateReminderForm} list="medicineList" placeholder="Medicine name *" required />
-              <input name="dosage" value={reminderForm.dosage} onChange={updateReminderForm} placeholder="Dosage, e.g., 500mg after meal" />
+              <input
+                name="medicine_name"
+                value={reminderForm.medicine_name}
+                onChange={updateReminderForm}
+                list="medicineList"
+                placeholder="Medicine name *"
+                required
+              />
+              <input
+                name="dosage"
+                value={reminderForm.dosage}
+                onChange={updateReminderForm}
+                placeholder="Dosage, e.g., 500mg after meal"
+              />
               <div className="two">
-                <input type="time" name="reminder_time" value={reminderForm.reminder_time} onChange={updateReminderForm} required />
-                <select name="frequency" value={reminderForm.frequency} onChange={updateReminderForm} required>
+                <input
+                  type="time"
+                  name="reminder_time"
+                  value={reminderForm.reminder_time}
+                  onChange={updateReminderForm}
+                  required
+                />
+                <select
+                  name="frequency"
+                  value={reminderForm.frequency}
+                  onChange={updateReminderForm}
+                  required
+                >
                   <option>Daily</option>
                   <option>Twice Daily</option>
                   <option>Three Times Daily</option>
@@ -653,111 +701,96 @@ export default function DrugInteractions() {
                 </select>
               </div>
               <div className="two">
-                <input type="date" name="start_date" value={reminderForm.start_date} onChange={updateReminderForm} required />
-                <input type="date" name="end_date" value={reminderForm.end_date} onChange={updateReminderForm} />
+                <input
+                  type="date"
+                  name="start_date"
+                  value={reminderForm.start_date}
+                  onChange={updateReminderForm}
+                  required
+                />
+                <input
+                  type="date"
+                  name="end_date"
+                  value={reminderForm.end_date}
+                  onChange={updateReminderForm}
+                />
               </div>
-              <textarea name="notes" value={reminderForm.notes} onChange={updateReminderForm} placeholder="Notes or instruction" />
-              <button className="primary-btn" disabled={loading}>Save Reminder</button>
+              <textarea
+                name="notes"
+                value={reminderForm.notes}
+                onChange={updateReminderForm}
+                placeholder="Notes or instruction"
+              />
+              <button className="primary-btn" disabled={loading}>
+                Save Reminder
+              </button>
             </form>
           )}
         </Modal>
       )}
 
       {showPrescription && (
-        <Modal title="Add Prescription" icon={<FileText size={18} />} onClose={() => setShowPrescription(false)}>
-          {!user ? (
-            <div className="login-needed">Please sign in first to add prescriptions.</div>
-          ) : (
+        <Modal
+          title="Add Prescription"
+          icon={<FileText size={18} />}
+          onClose={() => setShowPrescription(false)}
+        >
+          {user ? (
             <form className="modal-form" onSubmit={savePrescription}>
-              <input name="prescription_title" value={prescriptionForm.prescription_title} onChange={updatePrescriptionForm} placeholder="Prescription title *" required />
-              <input name="doctor_name" value={prescriptionForm.doctor_name} onChange={updatePrescriptionForm} placeholder="Doctor name" />
-              <input type="date" name="prescription_date" value={prescriptionForm.prescription_date} onChange={updatePrescriptionForm} />
+              <h3>Save prescription record</h3>
+              <input
+                name="prescription_title"
+                value={prescriptionForm.prescription_title}
+                onChange={updatePrescriptionForm}
+                placeholder="Prescription title *"
+                required
+              />
+              <input
+                name="doctor_name"
+                value={prescriptionForm.doctor_name}
+                onChange={updatePrescriptionForm}
+                placeholder="Doctor name"
+              />
+              <input
+                type="date"
+                name="prescription_date"
+                value={prescriptionForm.prescription_date}
+                onChange={updatePrescriptionForm}
+              />
               <label className="upload-box">
                 <UploadCloud size={22} />
                 <strong>Upload prescription file</strong>
                 <span>PDF, JPG, PNG, WEBP up to 5MB</span>
-                <input type="file" name="prescription_file" accept=".pdf,.jpg,.jpeg,.png,.webp" onChange={updatePrescriptionForm} />
+                <input
+                  type="file"
+                  name="prescription_file"
+                  accept=".pdf,.jpg,.jpeg,.png,.webp"
+                  onChange={updatePrescriptionForm}
+                />
               </label>
-              <textarea name="notes" value={prescriptionForm.notes} onChange={updatePrescriptionForm} placeholder="Notes" />
-              <button className="primary-btn" disabled={loading}>Save Prescription</button>
+              <textarea
+                name="notes"
+                value={prescriptionForm.notes}
+                onChange={updatePrescriptionForm}
+                placeholder="Notes"
+              />
+              <button className="primary-btn" disabled={loading}>
+                Save Prescription
+              </button>
             </form>
-            
-          )}
-          <form className="prescription-auto-card" onSubmit={uploadPrescriptionAndAddToCart}>
-  <div className="prescription-head">
-    <span>
-      <UploadCloud size={18} />
-      Add Prescription
-    </span>
-
-    <h2>Upload prescription and auto-add medicines to cart</h2>
-    <p>
-      The system will scan your prescription, match available pharmacy products,
-      add detected medicines to your cart, and ask you to review before checkout.
-    </p>
-  </div>
-
-  {notice && (
-    <div className={`drug-notice ${notice.type}`}>
-      {notice.type === "success" ? <CheckCircle size={18} /> : <AlertTriangle size={18} />}
-      {notice.message}
-    </div>
-  )}
-
-  <label className="prescription-upload-box">
-    <UploadCloud size={32} />
-    <strong>{prescriptionFile ? prescriptionFile.name : "Upload prescription"}</strong>
-    <small>JPG, PNG, WEBP, or PDF up to 8MB</small>
-
-    <input
-      type="file"
-      accept="image/*,.pdf"
-      onChange={(event) => setPrescriptionFile(event.target.files?.[0] || null)}
-    />
-  </label>
-
-  <label className="manual-text-box">
-    Prescription text / notes optional
-    <textarea
-      value={prescriptionText}
-      onChange={(event) => setPrescriptionText(event.target.value)}
-      placeholder="Optional: type medicine names if the image is unclear..."
-    />
-  </label>
-
-  <button className="scan-cart-btn" disabled={prescriptionLoading}>
-    <ShoppingCart size={18} />
-    {prescriptionLoading ? "Scanning Prescription..." : "Scan & Add Medicines to Cart"}
-  </button>
-
-  {prescriptionScan && (
-    <div className="scan-result-card">
-      <h3>Detected Medicines</h3>
-
-      {prescriptionScan.matched_products?.length ? (
-        <div className="detected-list">
-          {prescriptionScan.matched_products.map((product) => (
-            <div className="detected-item" key={product.id}>
-              <div>
-                <strong>{product.name}</strong>
-                <span>{product.manufacturer}</span>
-              </div>
-
-              <b>৳{Number(product.price || 0).toFixed(2)}</b>
+          ) : (
+            <div className="login-needed">
+              Sign in to save a prescription record. You can still scan a file
+              and add detected medicines to cart below.
             </div>
-          ))}
-        </div>
-      ) : (
-        <p>No matching product detected. Please search manually in Pharmacy.</p>
-      )}
-    </div>
-  )}
-</form>
+          )}
         </Modal>
       )}
 
       <datalist id="medicineList">
-        {medicineNames.map((name) => <option key={name} value={name} />)}
+        {medicineNames.map((name) => (
+          <option key={name} value={name} />
+        ))}
       </datalist>
     </section>
   );
@@ -780,8 +813,13 @@ function Modal({ title, icon, onClose, children }) {
     <div className="modal-backdrop">
       <div className="di-modal">
         <div className="modal-head">
-          <h2>{icon}{title}</h2>
-          <button type="button" onClick={onClose}><X size={20} /></button>
+          <h2>
+            {icon}
+            {title}
+          </h2>
+          <button type="button" onClick={onClose}>
+            <X size={20} />
+          </button>
         </div>
         {children}
       </div>
@@ -794,19 +832,29 @@ function ResultModal({ results, onClose }) {
   const comparison = results?.comparison || [];
 
   return (
-    <Modal title="Drug Interaction Results" icon={<ShieldCheck size={18} />} onClose={onClose}>
+    <Modal
+      title="Drug Interaction Results"
+      icon={<ShieldCheck size={18} />}
+      onClose={onClose}
+    >
       <div className="results-area">
         {results?.no_known_major_interaction ? (
           <div className="safe-result">
             <CheckCircle size={26} />
             <div>
               <strong>No listed major interaction found</strong>
-              <p>This does not guarantee safety. Ask a doctor or pharmacist before combining medicines.</p>
+              <p>
+                This does not guarantee safety. Ask a doctor or pharmacist
+                before combining medicines.
+              </p>
             </div>
           </div>
         ) : (
           items.map((item, index) => (
-            <article className={`interaction-result ${item.severity.toLowerCase()}`} key={`${item.pair}-${index}`}>
+            <article
+              className={`interaction-result ${item.severity.toLowerCase()}`}
+              key={`${item.pair}-${index}`}
+            >
               <span>{item.severity}</span>
               <h3>{item.pair}</h3>
               <p>{item.message}</p>
@@ -824,11 +872,21 @@ function ResultModal({ results, onClose }) {
             {comparison.map((medicine) => (
               <article key={medicine.medicine_name}>
                 <h4>{medicine.medicine_name}</h4>
-                <p><b>Category:</b> {medicine.category}</p>
-                <p><b>Use:</b> {medicine.common_use}</p>
-                <p><b>Dose:</b> {medicine.usual_dose}</p>
-                <p><b>Side effects:</b> {medicine.side_effects}</p>
-                <p><b>Warning:</b> {medicine.warnings}</p>
+                <p>
+                  <b>Category:</b> {medicine.category}
+                </p>
+                <p>
+                  <b>Use:</b> {medicine.common_use}
+                </p>
+                <p>
+                  <b>Dose:</b> {medicine.usual_dose}
+                </p>
+                <p>
+                  <b>Side effects:</b> {medicine.side_effects}
+                </p>
+                <p>
+                  <b>Warning:</b> {medicine.warnings}
+                </p>
               </article>
             ))}
           </div>
@@ -837,6 +895,7 @@ function ResultModal({ results, onClose }) {
     </Modal>
   );
 }
+
 
 const styles = `
 .di-page {
