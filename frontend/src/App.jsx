@@ -1,5 +1,7 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import Layout from "./components/Layout.jsx";
+import ProtectedRoute from "./components/ProtectedRoute.jsx";
+import Dashboard from "./pages/Dashboard.jsx";
 import Hospitals from "./pages/Hospitals.jsx";
 import DiagnosticCenters from "./pages/DiagnosticCenters.jsx";
 import BloodBanks from "./pages/BloodBanksPhp.jsx";
@@ -17,25 +19,36 @@ import DoctorTelemedicineDashboard from "./pages/DoctorTelemedicineDashboard.jsx
 export default function App() {
   return (
     <Routes>
-      {/* Admin page without main Header/Navbar */}
+      {/* Public auth pages */}
+      <Route path="/signin" element={<SignIn />} />
+      <Route path="/signup" element={<SignUp />} />
+
+      {/* Admin / manager pages use their own login */}
       <Route path="/pharmacy-admin" element={<PharmacyAdminDashboard />} />
       <Route path="/ambulance-manager" element={<AmbulanceManagerDashboard />} />
+      <Route path="/telemedicine-doctor" element={<DoctorTelemedicineDashboard />} />
 
-      {/* Public app pages with main Header/Navbar */}
-      <Route element={<Layout />}>
-        <Route path="/" element={<Navigate to="/hospitals" replace />} />
+      {/* User app pages require normal user sign in */}
+      <Route
+        element={
+          <ProtectedRoute>
+            <Layout />
+          </ProtectedRoute>
+        }
+      >
+        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/hospitals" element={<Hospitals />} />
         <Route path="/diagnostic-centers" element={<DiagnosticCenters />} />
         <Route path="/blood-banks" element={<BloodBanks />} />
         <Route path="/pharmacies" element={<Pharmacies />} />
         <Route path="/ambulance" element={<Ambulance />} />
         <Route path="/telemedicine" element={<Telemedicine />} />
-        <Route path="/telemedicine-doctor" element={<DoctorTelemedicineDashboard />} />
         <Route path="/drug-interactions" element={<DrugInteractions />} />
         <Route path="/appointments" element={<Appointments />} />
-        <Route path="/signin" element={<SignIn />} />
-        <Route path="/signup" element={<SignUp />} />
       </Route>
+
+      <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
   );
 }

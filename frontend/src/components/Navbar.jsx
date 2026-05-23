@@ -1,17 +1,22 @@
 import { NavLink } from "react-router-dom";
 import {
   Ambulance as AmbulanceIcon,
-  Building2,
   CalendarDays,
   Droplet,
   Hospital,
   Info,
+  LayoutDashboard,
   Microscope,
   Pill,
   Video,
 } from "lucide-react";
 
 const navItems = [
+  {
+    label: "Dashboard",
+    path: "/dashboard",
+    icon: LayoutDashboard,
+  },
   {
     label: "Hospitals",
     path: "/hospitals",
@@ -54,10 +59,61 @@ const navItems = [
   },
 ];
 
+const navFixStyles = `
+.nav .nav-container.dashboard-nav-fix {
+  width: 100%;
+  max-width: 100%;
+  justify-content: flex-start;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-left: 24px;
+  padding-right: 26px;
+  gap: 6px;
+  scrollbar-width: thin;
+}
+
+.nav .nav-container.dashboard-nav-fix::-webkit-scrollbar {
+  height: 6px;
+}
+
+.nav .nav-container.dashboard-nav-fix::-webkit-scrollbar-thumb {
+  background: rgba(37, 99, 235, .28);
+  border-radius: 999px;
+}
+
+.nav .nav-container.dashboard-nav-fix .nav-item {
+  flex: 0 0 auto;
+  min-width: max-content;
+  white-space: nowrap;
+  padding-left: 12px;
+  padding-right: 12px;
+  gap: 7px;
+}
+
+.nav .nav-container.dashboard-nav-fix .nav-item span {
+  white-space: nowrap;
+}
+
+@media (max-width: 1280px) {
+  .nav .nav-container.dashboard-nav-fix {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .nav .nav-container.dashboard-nav-fix .nav-item {
+    padding-left: 10px;
+    padding-right: 10px;
+    font-size: .92rem;
+  }
+}
+`;
+
 export default function Navbar() {
   return (
     <nav className="nav">
-      <div className="container nav-container">
+      <style>{navFixStyles}</style>
+
+      <div className="container nav-container dashboard-nav-fix">
         {navItems.map((item) => {
           const Icon = item.icon;
 

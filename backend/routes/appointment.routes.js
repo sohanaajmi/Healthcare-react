@@ -104,8 +104,20 @@ async function tableHasColumn(table, column) {
 }
 
 async function addColumnIfMissing(table, column, definition) {
-  if (!(await tableHasColumn(table, column))) {
+  if (await tableHasColumn(table, column)) return;
+
+  try {
     await pool.query(`ALTER TABLE \`${table}\` ADD COLUMN \`${column}\` ${definition}`);
+  } catch (error) {
+    // Nodemon/frontend can trigger multiple requests at once while the table
+    // migration is running. If another request already added the column between
+    // the INFORMATION_SCHEMA check and ALTER TABLE, ignore MySQL duplicate
+    // column errors and continue safely.
+    if (error?.code === "ER_DUP_FIELDNAME" || Number(error?.errno) === 1060) {
+      return;
+    }
+
+    throw error;
   }
 }
 
@@ -316,9 +328,22 @@ function normalizeFacility(row) {
   };
 }
 
+let appointmentTablesReadyPromise = null;
+
+function ensureAppointmentTablesOnce() {
+  if (!appointmentTablesReadyPromise) {
+    appointmentTablesReadyPromise = ensureAppointmentTables().catch((error) => {
+      appointmentTablesReadyPromise = null;
+      throw error;
+    });
+  }
+
+  return appointmentTablesReadyPromise;
+}
+
 router.use(async (_req, _res, next) => {
   try {
-    await ensureAppointmentTables();
+    await ensureAppointmentTablesOnce();
     next();
   } catch (error) {
     next(error);

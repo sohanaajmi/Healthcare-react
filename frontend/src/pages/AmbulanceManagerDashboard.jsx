@@ -350,61 +350,317 @@ export default function AmbulanceManagerDashboard() {
       setLoading(false);
     }
   }
+  const portalAuthStyles = `
+.portal-auth-screen {
+  position: relative;
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 32px 16px;
+  overflow: hidden;
+  isolation: isolate;
+  background: #0f766e;
+}
+
+.portal-auth-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 18% 24%, rgba(255,255,255,.22), transparent 18%),
+    radial-gradient(circle at 80% 24%, rgba(255,255,255,.18), transparent 20%),
+    linear-gradient(135deg, #14b8a6 0%, #22d3ee 44%, #2563eb 100%);
+}
+
+.portal-auth-bg::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.08) 1px, transparent 1px);
+  background-size: 46px 46px;
+  opacity: .35;
+}
+
+.portal-auth-bg::after {
+  content: "";
+  position: absolute;
+  left: -15%;
+  right: -15%;
+  bottom: -27%;
+  height: 48%;
+  border-radius: 50% 50% 0 0;
+  background: rgba(211, 252, 255, .55);
+  animation: waveFloat 8s ease-in-out infinite;
+}
+
+.float-icon {
+  position: absolute;
+  width: 92px;
+  height: 92px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(255,255,255,.18);
+  color: rgba(255,255,255,.88);
+  font-size: 2.25rem;
+  font-weight: 950;
+  backdrop-filter: blur(10px);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.26);
+  animation: floatUp 5.5s ease-in-out infinite;
+}
+
+.float-1 { left: 8%; top: 19%; animation-delay: 0s; }
+.float-2 { left: 31%; top: 6%; animation-delay: .75s; }
+.float-3 { right: 8%; top: 25%; animation-delay: 1.35s; }
+.float-4 { right: 39%; top: 15%; animation-delay: 2s; }
+
+.ecg-line {
+  position: absolute;
+  left: 0;
+  top: 12%;
+  width: 100%;
+  height: 120px;
+  opacity: .62;
+  z-index: 1;
+}
+
+.ecg-line path {
+  fill: none;
+  stroke: rgba(255,255,255,.78);
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 1300;
+  stroke-dashoffset: 1300;
+  animation: ecgMove 4.5s linear infinite;
+}
+
+.auth-wave {
+  position: absolute;
+  left: -15%;
+  right: -15%;
+  bottom: -28%;
+  height: 48%;
+  border-radius: 50% 50% 0 0;
+  background: rgba(218, 252, 255, .48);
+  z-index: 1;
+}
+
+.wave-two {
+  bottom: -34%;
+  background: rgba(255,255,255,.25);
+  animation: waveFloat 7s ease-in-out infinite reverse;
+}
+
+.portal-login-card {
+  position: relative;
+  z-index: 5;
+  width: min(520px, 100%);
+  padding: 38px 36px;
+  border-radius: 24px;
+  border: 1px solid rgba(255,255,255,.58);
+  background: rgba(236, 254, 255, .68);
+  box-shadow: 0 35px 95px rgba(15, 23, 42, .22);
+  backdrop-filter: blur(22px);
+}
+
+.portal-login-icon {
+  width: 72px;
+  height: 72px;
+  display: grid;
+  place-items: center;
+  margin: -6px auto 18px;
+  border-radius: 999px;
+  color: #0891b2;
+  background: rgba(255,255,255,.46);
+  box-shadow: 0 14px 32px rgba(15,23,42,.12);
+}
+
+.portal-kicker {
+  display: block;
+  text-align: center;
+  margin-bottom: 10px;
+  color: #0f766e;
+  font-size: .78rem;
+  font-weight: 950;
+  text-transform: uppercase;
+  letter-spacing: .16em;
+}
+
+.portal-login-card h1 {
+  margin: 0;
+  color: #334155;
+  text-align: center;
+  font-size: clamp(2rem, 4vw, 2.65rem);
+  letter-spacing: .02em;
+}
+
+.portal-login-card p {
+  margin: 12px auto 24px;
+  max-width: 420px;
+  color: #64748b;
+  text-align: center;
+  font-weight: 800;
+  line-height: 1.55;
+}
+
+.portal-login-card form {
+  display: grid;
+  gap: 16px;
+}
+
+.portal-login-card label {
+  display: grid;
+  gap: 8px;
+  color: #0f766e;
+  font-size: .84rem;
+  font-weight: 950;
+}
+
+.portal-login-card input {
+  width: 100%;
+  min-height: 48px;
+  border: 0;
+  border-bottom: 1px solid rgba(15,118,110,.25);
+  background: rgba(239, 246, 255, .78);
+  padding: 12px 14px;
+  color: #0f172a;
+  font: inherit;
+  font-weight: 800;
+  outline: none;
+}
+
+.portal-login-card input:focus {
+  box-shadow: 0 0 0 4px rgba(20,184,166,.16);
+  background: rgba(255,255,255,.9);
+}
+
+.portal-login-btn {
+  min-height: 56px;
+  margin-top: 8px;
+  border: none;
+  border-radius: 10px;
+  color: #fff;
+  background: linear-gradient(135deg, #14b8a6, #0891b2);
+  box-shadow: 0 18px 36px rgba(8,145,178,.28);
+  font-weight: 950;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.portal-login-btn:disabled {
+  opacity: .68;
+  cursor: not-allowed;
+}
+
+.portal-login-alert {
+  margin-bottom: 16px;
+  border-radius: 14px;
+  padding: 12px 14px;
+  font-weight: 900;
+}
+
+.portal-login-alert.success {
+  background: rgba(220,252,231,.9);
+  color: #166534;
+}
+
+.portal-login-alert.error {
+  background: rgba(254,226,226,.9);
+  color: #991b1b;
+}
+
+@keyframes floatUp {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-18px) scale(1.04); }
+}
+
+@keyframes ecgMove {
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes waveFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-18px); }
+}
+
+@media (max-width: 640px) {
+  .portal-login-card { padding: 28px 22px; }
+  .float-icon { width: 68px; height: 68px; font-size: 1.7rem; }
+  .ecg-line { top: 9%; }
+}
+`;
+
 
   if (!token) {
-    return (
-      <section className="manager-login-page">
-        <style>{styles}</style>
+  return (
+    <section className="portal-auth-screen ambulance-portal-auth">
+      <style>{portalAuthStyles}</style>
 
-        <div className="manager-login-card">
-          <div className="login-icon">
-            <Ambulance size={32} />
-          </div>
+      <div className="portal-auth-bg" aria-hidden="true">
+        <span className="float-icon float-1">✚</span>
+        <span className="float-icon float-2">⌖</span>
+        <span className="float-icon float-3">☤</span>
+        <span className="float-icon float-4">⌁</span>
+        <svg className="ecg-line" viewBox="0 0 1200 120" preserveAspectRatio="none">
+          <path d="M0 70 H145 L170 40 L205 95 L245 68 H325 L350 68 H480 L505 35 L540 92 L580 65 H720 L745 65 H900 L930 45 L965 86 L1005 64 H1200" />
+        </svg>
+        <div className="auth-wave wave-one" />
+        <div className="auth-wave wave-two" />
+      </div>
 
-          <h1>Ambulance Manager Login</h1>
-          <p>
-            Login to update your ambulance information, share current location,
-            and view user shared locations.
-          </p>
-
-          {notice && (
-            <div className={`manager-notice ${notice.type}`}>
-              {notice.message}
-            </div>
-          )}
-
-          <form onSubmit={submitLogin}>
-            <label>
-              Username
-              <input
-                name="username"
-                value={login.username}
-                onChange={updateLogin}
-                placeholder="ambulance1"
-                required
-              />
-            </label>
-
-            <label>
-              Password
-              <input
-                type="password"
-                name="password"
-                value={login.password}
-                onChange={updateLogin}
-                placeholder="Manager password"
-                required
-              />
-            </label>
-
-            <button disabled={loading}>
-              {loading ? "Signing in..." : "Open Manager Dashboard"}
-            </button>
-          </form>
+      <div className="portal-login-card">
+        <div className="portal-login-icon">
+          <Ambulance size={32} />
         </div>
-      </section>
-    );
-  }
+
+        <span className="portal-kicker">Live Emergency Console</span>
+        <h1>Ambulance Manager Login</h1>
+        <p>Update ambulance information, share live location, reply to patients, and manage emergency requests.</p>
+
+        {notice && (
+          <div className={`portal-login-alert ${notice.type}`}>
+            {notice.message}
+          </div>
+        )}
+
+        <form onSubmit={submitLogin}>
+          <label>
+            Username
+            <input
+              name="username"
+              value={login.username}
+              onChange={updateLogin}
+              placeholder="ambulance1"
+              required
+            />
+          </label>
+
+          <label>
+            Password
+            <input
+              type="password"
+              name="password"
+              value={login.password}
+              onChange={updateLogin}
+              placeholder="Manager password"
+              required
+            />
+          </label>
+
+          <button className="portal-login-btn" disabled={loading}>
+            {loading ? "Signing in..." : "Open Manager Dashboard"}
+          </button>
+        </form>
+      </div>
+    </section>
+  );
+}
 
   return (
     <section className="manager-page">

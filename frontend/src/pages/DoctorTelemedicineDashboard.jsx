@@ -20,6 +20,291 @@ import {
 } from "lucide-react";
 import api from "../services/api.js";
 
+const portalAuthStyles = `
+.portal-auth-screen {
+  position: relative;
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 32px 16px;
+  overflow: hidden;
+  isolation: isolate;
+  color: #0f172a;
+}
+
+.portal-auth-bg {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 22% 18%, rgba(255,255,255,.22), transparent 21%),
+    linear-gradient(135deg, #14b8a6 0%, #22d3ee 48%, #2563eb 100%);
+}
+
+.portal-auth-bg::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.07) 1px, transparent 1px);
+  background-size: 48px 48px;
+  animation: gridDrift 18s linear infinite;
+}
+
+.portal-auth-bg::after {
+  content: "";
+  position: absolute;
+  left: -14%;
+  right: -14%;
+  bottom: -29%;
+  height: 48%;
+  background: rgba(209, 250, 249, .56);
+  border-radius: 50% 50% 0 0;
+  animation: waveFloat 8s ease-in-out infinite;
+}
+
+.portal-blob {
+  position: absolute;
+  border-radius: 999px;
+  filter: blur(38px);
+  opacity: .35;
+  animation: blobFloat 11s ease-in-out infinite;
+}
+
+.portal-blob.one {
+  width: 260px;
+  height: 260px;
+  left: 11%;
+  bottom: 16%;
+  background: #99f6e4;
+}
+
+.portal-blob.two {
+  width: 310px;
+  height: 310px;
+  right: 13%;
+  top: 15%;
+  background: #93c5fd;
+  animation-delay: -4s;
+}
+
+.portal-float-icon {
+  position: absolute;
+  width: clamp(54px, 7vw, 92px);
+  height: clamp(54px, 7vw, 92px);
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(255,255,255,.22);
+  color: rgba(255,255,255,.92);
+  font-size: clamp(1.4rem, 3vw, 2.4rem);
+  font-weight: 950;
+  border: 1px solid rgba(255,255,255,.18);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 24px 50px rgba(15,23,42,.08);
+  animation: floatUp 5.4s ease-in-out infinite;
+}
+
+.float-1 { left: 7%; top: 18%; animation-delay: 0s; }
+.float-2 { left: 31%; top: 7%; animation-delay: .8s; }
+.float-3 { right: 8%; top: 23%; animation-delay: 1.4s; }
+.float-4 { right: 39%; top: 14%; animation-delay: 2s; }
+
+.portal-ecg-line {
+  position: absolute;
+  left: 0;
+  top: 13%;
+  width: 100%;
+  height: 100px;
+  opacity: .52;
+}
+
+.portal-ecg-line svg {
+  width: 100%;
+  height: 100%;
+}
+
+.portal-ecg-line path {
+  fill: none;
+  stroke: rgba(255,255,255,.75);
+  stroke-width: 3.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 1300;
+  stroke-dashoffset: 1300;
+  animation: ecgMove 4.4s linear infinite;
+}
+
+.portal-login-card {
+  position: relative;
+  z-index: 3;
+  width: min(520px, 100%);
+  display: grid;
+  gap: 15px;
+  padding: clamp(26px, 4vw, 38px);
+  border-radius: 28px;
+  border: 1px solid rgba(255,255,255,.55);
+  background: rgba(236, 254, 255, .72);
+  box-shadow: 0 34px 90px rgba(15,23,42,.22);
+  backdrop-filter: blur(20px);
+  animation: cardEnter .65s ease both;
+}
+
+.portal-login-icon {
+  width: 68px;
+  height: 68px;
+  display: grid;
+  place-items: center;
+  justify-self: center;
+  border-radius: 50%;
+  color: #0f766e;
+  background: rgba(255,255,255,.48);
+  box-shadow: 0 18px 45px rgba(15,23,42,.12);
+}
+
+.portal-login-card h1 {
+  margin: 8px 0 0;
+  color: #334155;
+  font-size: clamp(2rem, 4vw, 2.55rem);
+  line-height: 1.05;
+  text-align: center;
+  letter-spacing: .03em;
+}
+
+.portal-login-card p {
+  margin: 0 auto 10px;
+  max-width: 410px;
+  color: #64748b;
+  text-align: center;
+  font-weight: 800;
+  line-height: 1.55;
+}
+
+.portal-login-card form {
+  display: grid;
+  gap: 14px;
+}
+
+.portal-login-card label {
+  display: grid;
+  gap: 7px;
+  color: #0f766e;
+  font-size: .83rem;
+  font-weight: 950;
+  letter-spacing: .02em;
+}
+
+.portal-login-card input {
+  width: 100%;
+  min-height: 50px;
+  border: 0;
+  border-bottom: 1px solid rgba(15,118,110,.28);
+  border-radius: 9px 9px 0 0;
+  background: rgba(239, 246, 255, .82);
+  padding: 12px 14px;
+  color: #0f172a;
+  font: inherit;
+  font-weight: 800;
+  outline: none;
+  transition: .2s ease;
+}
+
+.portal-login-card input:focus {
+  background: rgba(255,255,255,.92);
+  border-color: #0f766e;
+  box-shadow: 0 8px 22px rgba(15,118,110,.12);
+}
+
+.portal-login-card button {
+  min-height: 56px;
+  border: 0;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #14b8a6, #0891b2);
+  color: white;
+  box-shadow: 0 18px 34px rgba(8,145,178,.28);
+  cursor: pointer;
+  font-weight: 950;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+  transition: .2s ease;
+}
+
+.portal-login-card button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 22px 42px rgba(8,145,178,.34);
+}
+
+.portal-login-card button:disabled {
+  opacity: .68;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.portal-login-alert,
+.admin-login-alert,
+.td-notice {
+  border-radius: 15px;
+  padding: 12px 14px;
+  font-weight: 900;
+}
+
+.portal-login-alert.success,
+.admin-login-alert.success,
+.td-notice.success {
+  background: rgba(220, 252, 231, .9);
+  color: #166534;
+}
+
+.portal-login-alert.error,
+.admin-login-alert.error,
+.td-notice.error {
+  background: rgba(254, 226, 226, .92);
+  color: #991b1b;
+}
+
+.portal-login-help {
+  margin-top: 2px;
+  color: #475569;
+  text-align: center;
+  font-weight: 800;
+}
+
+@keyframes cardEnter {
+  from { opacity: 0; transform: translateY(18px) scale(.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes floatUp {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-18px) scale(1.04); }
+}
+
+@keyframes blobFloat {
+  0%, 100% { transform: translate3d(0,0,0) scale(1); }
+  50% { transform: translate3d(20px,-18px,0) scale(1.08); }
+}
+
+@keyframes ecgMove {
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes waveFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-18px); }
+}
+
+@keyframes gridDrift {
+  to { background-position: 48px 48px; }
+}
+
+@media (max-width: 640px) {
+  .portal-login-card { border-radius: 24px; }
+  .float-2, .float-4 { display: none; }
+}
+`;
+
 const initialLogin = { username: "", password: "" };
 const initialSchedule = {
   schedule_date: new Date().toISOString().slice(0, 10),
@@ -46,6 +331,24 @@ function formatDate(value) {
 
 function money(value) {
   return Number(value || 0).toFixed(2);
+}
+
+function PortalAuthBackground() {
+  return (
+    <div className="portal-auth-bg" aria-hidden="true">
+      <span className="portal-blob one" />
+      <span className="portal-blob two" />
+      <span className="portal-float-icon float-1">✚</span>
+      <span className="portal-float-icon float-2">♥</span>
+      <span className="portal-float-icon float-3">⚕</span>
+      <span className="portal-float-icon float-4">◐</span>
+      <div className="portal-ecg-line">
+        <svg viewBox="0 0 1440 120" preserveAspectRatio="none">
+          <path d="M0 70 H175 L210 70 L245 38 L285 94 L322 70 H480 L508 70 L530 48 L552 92 L584 70 H760 L790 70 L816 38 L846 98 L884 70 H1075 L1110 70 L1138 46 L1168 90 L1206 70 H1440" />
+        </svg>
+      </div>
+    </div>
+  );
 }
 
 function doctorConfig(token) {
@@ -265,19 +568,51 @@ export default function DoctorTelemedicineDashboard() {
 
   if (!token) {
     return (
-      <section className="td-page login">
-        <style>{styles}</style>
-        <div className="td-login-card">
-          <div className="td-login-icon"><Stethoscope size={34} /></div>
+      <section className="portal-auth-screen doctor-portal-login">
+        <style>{portalAuthStyles}</style>
+        <PortalAuthBackground />
+
+        <div className="portal-login-card">
+          <div className="portal-login-icon">
+            <Stethoscope size={34} />
+          </div>
+
           <h1>Telemedicine Doctor Portal</h1>
-          <p>Login to manage your schedule, accept consultation requests, chat, and start video queue.</p>
-          {notice && <div className={`td-notice ${notice.type}`}>{notice.message}</div>}
+          <p>
+            Login to manage your schedule, accept consultation requests,
+            chat, and start the video queue.
+          </p>
+
+          {notice && <div className={`portal-login-alert ${notice.type}`}>{notice.message}</div>}
+
           <form onSubmit={submitLogin}>
-            <input name="username" value={login.username} onChange={(e) => setLogin((c) => ({ ...c, username: e.target.value }))} placeholder="doctor1" required />
-            <input type="password" name="password" value={login.password} onChange={(e) => setLogin((c) => ({ ...c, password: e.target.value }))} placeholder="Doctor@123" required />
+            <label>
+              Doctor Username
+              <input
+                name="username"
+                value={login.username}
+                onChange={(e) => setLogin((c) => ({ ...c, username: e.target.value }))}
+                placeholder="doctor1"
+                required
+              />
+            </label>
+
+            <label>
+              Password
+              <input
+                type="password"
+                name="password"
+                value={login.password}
+                onChange={(e) => setLogin((c) => ({ ...c, password: e.target.value }))}
+                placeholder="Doctor@123"
+                required
+              />
+            </label>
+
             <button disabled={loading}>{loading ? "Signing in..." : "Open Doctor Dashboard"}</button>
           </form>
-          <small>Demo doctors: doctor1 to doctor8 · password: Doctor@123</small>
+
+          <small className="portal-login-help">Demo doctors: doctor1 to doctor8 · password: Doctor@123</small>
         </div>
       </section>
     );
