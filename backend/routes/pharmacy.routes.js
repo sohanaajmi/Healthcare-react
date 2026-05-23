@@ -77,7 +77,7 @@ function requirePharmacyAdmin(req, res, next) {
   if (!authHeader?.startsWith("Bearer ")) {
     return res.status(401).json({
       success: false,
-      message: "Pharmacy admin login required.",
+      message: " login required.",
     });
   }
 

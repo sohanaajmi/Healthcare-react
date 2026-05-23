@@ -10,6 +10,7 @@ import healthcareRoutes from "./routes/healthcare.routes.js";
 import bloodbankRoutes from "./routes/bloodbank.routes.js";
 import pharmacyRoutes from "./routes/pharmacy.routes.js";
 import ambulanceRoutes from "./routes/ambulance.routes.js";
+import drugRoutes from "./routes/drug.routes.js";
 
 dotenv.config();
 
@@ -36,6 +37,7 @@ app.use("/api/healthcare", healthcareRoutes);
 app.use("/api/bloodbank", bloodbankRoutes);
 app.use("/api/pharmacy", pharmacyRoutes);
 app.use("/api/ambulance", ambulanceRoutes);
+app.use("/api/drug-interactions", drugRoutes);
 
 app.get("/", (req, res) => {
   res.json({

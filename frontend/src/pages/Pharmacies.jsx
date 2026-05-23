@@ -393,11 +393,7 @@ export default function Pharmacies() {
             <ReceiptText size={16} />
             My Orders
           </button>
-          {isPharmacyAdmin && (
-            <button className={view === "admin" ? "active" : ""} onClick={() => setView("admin")}>
-              Pharmacy Admin
-            </button>
-          )}
+          
 
         </div>
 
